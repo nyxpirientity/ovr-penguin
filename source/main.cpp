@@ -7,6 +7,7 @@
 #include <iostream>
 #include "types/string_command.hpp"
 #include <types/event.hpp>
+#include <pipewire/pipewire.h>
 #include <GLFW/glfw3.h>
 
 
@@ -65,7 +66,7 @@ void opengl_debug_callback(GLenum source,
         return;
     }
 
-int main()
+int main(int argc, char** argv)
 {
     // Why ???
     std::cout << "Crowbars are very versatile.\n";
@@ -82,27 +83,19 @@ int main()
     std::cout << "       \\ /\\/\\ /\\/\\ /    \n";
     std::cout << "        -\\__/-\\__/-     \n";
     std::cout << "       OVR Penguin\n";
-
-    //GMainContext* g_main_context = g_main_context_default();
-
-    /*GLibErrorPtr obj_creation_error = nullptr;
-    GLibAutoPtr<XdpPortal> xdp_portal = xdp_portal_initable_new(obj_creation_error.pass());
-
-    if (!xdp_portal)
+    
+    std::cout << "Initializing GLFW...\n";
+    if (glfwInit() != GLFW_TRUE)
     {
-        std::cerr << format_gerror_string("Failed to create XdpPortal object :c", *obj_creation_error);
-        std::cout << "exiting...\n";
+        std::cout << "GLFW initialization failed!\nExiting... :c\n";
         return 0;
     }
+    std::cout << "GLFW initialized with version '" << glfwGetVersionString() << "'!\n\n";
 
-    xdp_portal_create_screencast_session(xdp_portal.get(),
-                                         XdpOutputType(XDP_OUTPUT_MONITOR | XDP_OUTPUT_VIRTUAL | XDP_OUTPUT_WINDOW),
-                                         XdpScreencastFlags(XDP_SCREENCAST_FLAG_NONE),
-                                         XdpCursorMode(XDP_CURSOR_MODE_EMBEDDED),
-                                         XdpPersistMode(XDP_PERSIST_MODE_TRANSIENT),
-                                         NULL, NULL, on_screencast_session_creation, NULL);*/
-    glfwInit();
-
+    std::cout << "Initializing Pipewire...\n";
+    pw_init(&argc, &argv);
+    std::cout << "Pipewire initialized with version '" << pw_get_library_version() << "'!\n\n";
+    
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -112,12 +105,12 @@ int main()
                  "OVR Penguin uses profiles, which are to save and load setups/states. By default, you are loaded into an empty profile.\n"
                  "Due to SteamVR printing to standard out automatically, OVRPenguin will not initialize OpenVR until you enter the command 'ovr-init'.\n"
                  "It is advised to launch SteamVR *before* launching OVRPenguin.\n";
-
+    
     RootNode root_node;
     root_node.adopt(Node::construct<OvrPenguin>());
 
     root_node.start();
-    //g_main_context_iteration(g_main_context.get(), false);
+
 
     std::cout << "Returning 0! c:\n";
     return 0;

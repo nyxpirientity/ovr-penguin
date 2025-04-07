@@ -29,6 +29,7 @@ add_executable(${PROJECT_NAME}
     source/types/event.hpp
     source/types/mutex.hpp
     source/graphics/gl_context.cpp source/graphics/gl_context.hpp
+    source/media/screen_capturer.cpp source/media/screen_capturer.hpp
 
     third-party/glad/src/gl.c
     )

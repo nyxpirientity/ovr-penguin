@@ -74,7 +74,7 @@ public:
         return ptr;
     }
 
-    const T* get() const
+    T* get() const
     {
         return ptr;
     }
