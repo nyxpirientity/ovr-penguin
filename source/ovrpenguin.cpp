@@ -4,6 +4,7 @@
 #include "types/string_command.hpp"
 #include "vr/ovr_overlay.hpp"
 #include "graphics/gl_context.hpp"
+#include "media/screen_capturer.hpp"
 
 namespace nyxpiri::ovrpenguin
 {
@@ -13,6 +14,7 @@ OvrPenguin::OvrPenguin()
     ovr_runtime = adopt(Node::construct<OvrRuntime>(io_handler));
     gl_context = adopt(Node::construct<GlContext>());
     test_overlay = adopt(Node::construct<OvrOverlay>(gl_context));
+    screen_capturer = adopt(Node::construct<ScreenCapturer, Logger&>(logger));
 }
 
 OvrPenguin::~OvrPenguin()
@@ -66,6 +68,10 @@ void OvrPenguin::execute_command(const std::string& input)
         logger.log("OvrPenguin", "initializing OpenVR..,,,", true);
         ovr_runtime->initialize();
         test_overlay->set_overlay_type(OvrOverlay::Type::dashboard);
+    }
+    else if (command.get_parameter(0) == "make-the-stream!")
+    {
+        screen_capturer->create_stream();
     }
     else
     {

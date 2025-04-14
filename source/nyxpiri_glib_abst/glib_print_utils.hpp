@@ -5,9 +5,9 @@
 
 namespace nyxpiri::ovrpenguin
 {
-std::string format_gerror_string(const std::string& generic_msg, const GError& gerror)
+static inline std::string format_gerror_string(const std::string& generic_msg, const GError& gerror)
 {
-    return generic_msg + "\n Here's what I was told \"" + gerror.message + "\"\n";
+    return generic_msg + "\n Here's what I was told \"" + gerror.message + "\"";
 }
 } // nyxpiri::ovrpenguin
 #endif // PRINT_UTILS_H

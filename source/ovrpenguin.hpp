@@ -25,6 +25,7 @@ private:
     WeakPtr<class OvrRuntime> ovr_runtime = nullptr;
     WeakPtr<class GlContext> gl_context = nullptr;
     WeakPtr<class OvrOverlay> test_overlay = nullptr;
+    WeakPtr<class ScreenCapturer> screen_capturer = nullptr;
 
     EventBinding input_event_binding;
 };

@@ -23,6 +23,20 @@ void StdIoHandler::on_stop()
 {
     io_thread_enabled = false;
     io_thread.join();
+
+    std::cout << "[info] ~ StdIoHandler: Stopping. My final message, if any, is the result of flushing the output buffer.\n";
+
+    auto output_buf_guard = output_buffer.write_lock();
+
+    if (not output_buf_guard.data().empty())
+    {
+        std::cout << output_buf_guard.data();
+        output_buf_guard.data().clear();
+    }
+    
+    std::cout.flush();
+
+    output_buf_guard.unlock();
 }
 
 Event<std::string>& StdIoHandler::async_await_input()
@@ -34,6 +48,12 @@ Event<std::string>& StdIoHandler::async_await_input()
 
 void StdIoHandler::async_print_string(const std::string& string)
 {
+    if (not is_started())
+    {
+        std::cout << string;
+        std::cout.flush();
+        return;
+    }
     auto output_buf_guard = output_buffer.write_lock();
     output_buf_guard.data().append(string);
     output_buf_guard.unlock();

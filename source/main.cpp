@@ -106,12 +106,14 @@ int main(int argc, char** argv)
                  "Due to SteamVR printing to standard out automatically, OVRPenguin will not initialize OpenVR until you enter the command 'ovr-init'.\n"
                  "It is advised to launch SteamVR *before* launching OVRPenguin.\n";
     
-    RootNode root_node;
-    root_node.adopt(Node::construct<OvrPenguin>());
+    RootNode* root_node = new RootNode();
+    root_node->adopt(Node::construct<OvrPenguin>());
 
-    root_node.start();
+    root_node->start();
 
+    delete root_node;
 
-    std::cout << "Returning 0! c:\n";
+    std::cout << "\n----------------------\nFinished execution! Returning 0! c:\n";
+    
     return 0;
 }
