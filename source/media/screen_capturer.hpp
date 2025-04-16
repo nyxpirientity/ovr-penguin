@@ -23,7 +23,7 @@ public:
     ~ScreenCaptureStream();
 
 public:
-    Event<DynArray<Color>, usize, usize> on_data_received;
+    Event<const DynArray<Color>&, usize, usize> on_data_received;
 
 public:
     void debug_log_info();
@@ -52,6 +52,7 @@ private:
     spa_video_info m_spa_video_info;
     class Logger& logger;
     XdpSession* session = nullptr;
+    DynArray<Color> screen_buffer;
 };
 
 class ScreenCapturer : public Node

@@ -55,23 +55,12 @@ void ScreenCapturer::on_start()
     }
 }
 
-static usize test = 0;
-
 void ScreenCapturer::on_tick(real delta_seconds)
 {
     Super::on_tick(delta_seconds);
 
     pw_loop_iterate(m_pw_loop, 0);
     g_main_context_iteration(g_main_context, false);
-
-    test++;
-    if (test % 1000 == 500)
-    {
-        for (usize i = 0; i < streams.size(); i++)
-        {
-            streams[i]->debug_log_info();
-        }
-    }
 }
 
 void ScreenCapturer::on_stop()
@@ -107,7 +96,7 @@ ScreenCaptureStream::ScreenCaptureStream(WeakPtr<ScreenCapturer> in_capturer, Lo
 ScreenCaptureStream::~ScreenCaptureStream()
 {
     pw_stream_disconnect(m_pw_stream);
-    logger.log("ScreenCaptureStream", "...Closing XdpSession!", true);
+    logger.log("ScreenCaptureStream", "...Closing XdpSession!", false);
     xdp_session_close(session);
 }
 
@@ -134,7 +123,7 @@ void ScreenCaptureStream::on_screencast_session_created(GObject *source_object, 
         return;
     }
 
-    logger.log("ScreenCaptureStream", "Starting XdpSession!", true);
+    logger.log("ScreenCaptureStream", "Starting XdpSession!", false);
 
     xdp_session_start(session.get(), NULL, NULL, static_on_screencast_session_start, this);
 }
@@ -159,12 +148,12 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
         return;
     }
 
-    logger.log("ScreenCaptureStream", "XdpSession started!", true);
+    logger.log("ScreenCaptureStream", "XdpSession started!", false);
     
     XdpSessionState session_state = xdp_session_get_session_state(session);
     if (session_state == XdpSessionState::XDP_SESSION_ACTIVE)
     {
-        logger.log("ScreenCaptureStream", "Current status is active!", true);
+        logger.log("ScreenCaptureStream", "Current status is active!", false);
     }
     else
     {
@@ -189,7 +178,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     }
 
     u32 pw_node_id = g_variant_get_uint32(xdp_pw_node_id);
-    logger.log("ScreenCaptureStream", "Pipewire node ID is " + std::to_string(pw_node_id), true);
+    logger.log("ScreenCaptureStream", "Pipewire node ID is " + std::to_string(pw_node_id), false);
 
     pw_properties* stream_props = pw_properties_new(PW_KEY_MEDIA_TYPE, "Video",
         PW_KEY_MEDIA_CATEGORY, "Capture",
@@ -237,25 +226,25 @@ void ScreenCaptureStream::on_stream_state_changed(pw_stream_state old, pw_stream
 
     if (state == PW_STREAM_STATE_STREAMING)
     {
-        logger.log("ScreenCaptureStream", "Stream status is streaming!", true);
+        logger.log("ScreenCaptureStream", "Stream status is streaming!", false);
         return;
     }
 
     if (state == PW_STREAM_STATE_UNCONNECTED)
     {
-        logger.log("ScreenCaptureStream", "Stream status is... unconnected?", true);
+        //logger.log("ScreenCaptureStream", "Stream status is... unconnected?", true);
         return;
     }
 
     if (state == PW_STREAM_STATE_CONNECTING)
     {
-        logger.log("ScreenCaptureStream", "Stream status is... connecting...? hopefully without error...", true);
+        //logger.log("ScreenCaptureStream", "Stream status is... connecting...? hopefully without error...", true);
         return;
     }
 
     if (state == PW_STREAM_STATE_PAUSED)
     {
-        logger.log("ScreenCaptureStream", "Stream status is... paused", true);
+        //logger.log("ScreenCaptureStream", "Stream status is... paused", true);
         return;
     }
 }
@@ -279,11 +268,9 @@ void ScreenCaptureStream::on_process()
 {
     pw_buffer* buffer = pw_stream_dequeue_buffer(m_pw_stream);
 
-    DynArray<Color> data;
-
     spa_video_info_raw raw_info = m_spa_video_info.info.raw;
 
-    data.resize(raw_info.size.height * raw_info.size.width);
+    screen_buffer.resize(raw_info.size.height * raw_info.size.width);
 
     if (buffer->buffer->n_datas <= 0)
     {
@@ -304,23 +291,23 @@ void ScreenCaptureStream::on_process()
     switch (raw_info.format)
     {
     case SPA_VIDEO_FORMAT_RGB:
-        for (usize i = 0; i < data.size(); i++)
+        for (usize i = 0; i < screen_buffer.size(); i++)
         {
-            data[i] = Color(fragment_data[i * 3], fragment_data[i * 3 + 1], fragment_data[i * 3 + 2], 255);
+            screen_buffer[i] = Color(fragment_data[i * 3], fragment_data[i * 3 + 1], fragment_data[i * 3 + 2], 255);
         }
         break;
     
     case SPA_VIDEO_FORMAT_RGBA:
-        for (usize i = 0; i < data.size(); i++)
+        for (usize i = 0; i < screen_buffer.size(); i++)
         {
-            data[i] = Color(fragment_data[i * 4], fragment_data[i * 4 + 1], fragment_data[i * 4 + 2], fragment_data[i * 4 + 3]);
+            screen_buffer[i] = Color(fragment_data[i * 4], fragment_data[i * 4 + 1], fragment_data[i * 4 + 2], fragment_data[i * 4 + 3]);
         }
         break;
 
     case SPA_VIDEO_FORMAT_BGRx:
-        for (usize i = 0; i < data.size(); i++)
+        for (usize i = 0; i < screen_buffer.size(); i++)
         {
-            data[i] = Color(fragment_data[i * 4 + 2], fragment_data[i * 4 + 1], fragment_data[i * 4], 255);
+            screen_buffer[i] = Color(fragment_data[i * 4 + 2], fragment_data[i * 4 + 1], fragment_data[i * 4], 255);
         }
         break;
     default:
@@ -334,7 +321,7 @@ void ScreenCaptureStream::on_process()
         return;
     }
 
-    on_data_received.broadcast(data, raw_info.size.width, raw_info.size.height);
+    on_data_received.broadcast(screen_buffer, raw_info.size.width, raw_info.size.height);
 
     pw_stream_queue_buffer(m_pw_stream, buffer);
 }

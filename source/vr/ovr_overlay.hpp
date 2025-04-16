@@ -28,6 +28,10 @@ public:
 
     void set_texture_data(const Color* data, usize width, usize height);
 
+    [[nodiscard]] const std::string& get_overlay_name() const { return overlay_name; }
+    [[nodiscard]] bool set_overlay_name(const std::string& in_name); 
+
+
 protected:
     virtual void on_start() override;
     virtual void on_tick(real delta_seconds) override;
@@ -40,10 +44,11 @@ private:
     u64 handle = -1;
     u64 thumbnail_handle = -1;
     Type overlay_type = Type::null;
-    DynArray<Color8> texture_data;
+    DynArray<Color> texture_data;
     WeakPtr<class GlContext> gl_context = nullptr;
     u32 gl_texture_id = 0;
     vr::Texture_t* vr_texture = nullptr;
+    std::string overlay_name = "ovr-penguin-overlay!";
 
 };
 

@@ -85,11 +85,11 @@ bool OvrOverlay::set_overlay_type(Type new_type)
         return true;
 
     case Type::dashboard:
-        creation_error = vr::VROverlay()->CreateDashboardOverlay("test", "test", &handle, &thumbnail_handle);
+        creation_error = vr::VROverlay()->CreateDashboardOverlay(overlay_name.c_str(), overlay_name.c_str(), &handle, &thumbnail_handle);
         break;
-
+        
     case Type::world:
-        creation_error = vr::VROverlay()->CreateOverlay("test", "test", &handle);
+        creation_error = vr::VROverlay()->CreateOverlay(overlay_name.c_str(), overlay_name.c_str(), &handle);
         break;
     }
 
@@ -107,17 +107,9 @@ bool OvrOverlay::set_overlay_type(Type new_type)
 void OvrOverlay::set_texture_data(const Color const* data, usize width, usize height)
 {
     texture_data.resize(width * height);
-
-    usize final_index = texture_data.size() - 1;
-
-    for (usize i = 0; i < width * height; i++)
-    {
-        texture_data[i].r = data[i].r * 255;
-        texture_data[i].g = data[i].g * 255;
-        texture_data[i].b = data[i].b * 255;
-        texture_data[i].a = data[i].a * 255;
-    }
     
+    std::memcpy(&texture_data[0], data, width * height * sizeof(Color));
+
     for (usize i = 0; i < height / 2; i++)
     {
         for (usize j = 0; j < width; j++)
@@ -125,7 +117,7 @@ void OvrOverlay::set_texture_data(const Color const* data, usize width, usize he
             usize top_index = i * width + j;
             usize bottom_index = (height - i - 1) * width + j;
 
-            Color8 temp = texture_data[top_index];
+            Color temp = texture_data[top_index];
             texture_data[top_index] = texture_data[bottom_index];
             texture_data[bottom_index] = temp;
         }
@@ -157,6 +149,25 @@ void OvrOverlay::set_texture_data(const Color const* data, usize width, usize he
     vr::VROverlayError texture_error = vr::VROverlay()->SetOverlayTexture(handle, vr_texture);
 
     gl_context->unbind();
+}
+
+bool OvrOverlay::set_overlay_name(const std::string &in_name)
+{
+    overlay_name = in_name;
+
+    if (is_null())
+    {
+        return true;
+    }
+
+    vr::VROverlayError name_error = vr::VROverlay()->SetOverlayName(handle, in_name.c_str());
+    
+    if (name_error != vr::VROverlayError::VROverlayError_None)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace nyxpiri::ovrpenguin
