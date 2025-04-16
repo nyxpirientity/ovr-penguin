@@ -17,7 +17,7 @@ void RootNode::on_start()
         previous_tick_time_point = std::chrono::steady_clock::now();
 
         tick(delta_seconds);
-        std::this_thread::sleep_for(std::chrono::milliseconds(8) - (std::chrono::steady_clock::now() - previous_tick_time_point));
+        std::this_thread::sleep_for(std::chrono::milliseconds(4) - (std::chrono::steady_clock::now() - previous_tick_time_point));
     }
 }
 

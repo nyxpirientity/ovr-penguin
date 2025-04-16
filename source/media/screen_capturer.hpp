@@ -11,6 +11,7 @@
 #include "nyxpiri_glib_abst/glib_print_utils.hpp"
 
 #include <pipewire/pipewire.h>
+#include <spa/param/video/format-utils.h>
 #include <libportal/portal.h>
 
 namespace nyxpiri::ovrpenguin
@@ -22,7 +23,7 @@ public:
     ~ScreenCaptureStream();
 
 public:
-    Event<void(DynArray<Color> data, usize width, usize height)> on_data_recieved;
+    Event<DynArray<Color>, usize, usize> on_data_received;
 
 public:
     void debug_log_info();
@@ -48,6 +49,7 @@ private:
     pw_stream* m_pw_stream = nullptr;
     pw_stream_events m_pw_stream_events;
     spa_hook m_pw_stream_events_listener;
+    spa_video_info m_spa_video_info;
     class Logger& logger;
     XdpSession* session = nullptr;
 };

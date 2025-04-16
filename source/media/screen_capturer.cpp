@@ -196,7 +196,11 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
         PW_KEY_MEDIA_ROLE, "Screen",
         NULL);
     
-    m_pw_stream = pw_stream_new_simple(pw_context_get_main_loop(capturer->get_pw_context()), "screencast", stream_props, &m_pw_stream_events, this);
+    m_pw_core = pw_context_connect_fd(capturer->get_pw_context(), xdp_session_open_pipewire_remote(session), nullptr, 0); 
+
+    spa_zero(m_spa_video_info);
+
+    m_pw_stream = pw_stream_new(m_pw_core, "ovr-penguin", stream_props);
     const spa_pod *params[1];
     u8 buffer[1024];
     spa_pod_builder spa_pod_builder = SPA_POD_BUILDER_INIT(buffer, sizeof(buffer));
@@ -204,26 +208,23 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
         SPA_TYPE_OBJECT_Format, SPA_PARAM_EnumFormat,
         SPA_FORMAT_mediaType,       SPA_POD_Id(SPA_MEDIA_TYPE_video),
         SPA_FORMAT_mediaSubtype,    SPA_POD_Id(SPA_MEDIA_SUBTYPE_raw),
-        SPA_FORMAT_VIDEO_format,    SPA_POD_CHOICE_ENUM_Id(7,
-                                        SPA_VIDEO_FORMAT_RGB,
+        SPA_FORMAT_VIDEO_format,    SPA_POD_CHOICE_ENUM_Id(3,
                                         SPA_VIDEO_FORMAT_RGB,
                                         SPA_VIDEO_FORMAT_RGBA,
-                                        SPA_VIDEO_FORMAT_RGBx,
-                                        SPA_VIDEO_FORMAT_BGRx,
-                                        SPA_VIDEO_FORMAT_YUY2,
-                                        SPA_VIDEO_FORMAT_I420)));
+                                        SPA_VIDEO_FORMAT_BGRx
+                                        )));
         
+    spa_zero(m_pw_stream_events_listener);
+    pw_stream_add_listener(m_pw_stream, &m_pw_stream_events_listener, &m_pw_stream_events, this);
     
-    
+    int connect_result = pw_stream_connect(m_pw_stream, PW_DIRECTION_INPUT, pw_node_id, pw_stream_flags(PW_STREAM_FLAG_MAP_BUFFERS | PW_STREAM_FLAG_AUTOCONNECT), params, 1);
 
-    int connect_result = pw_stream_connect(m_pw_stream, PW_DIRECTION_INPUT, PW_ID_ANY, pw_stream_flags(PW_STREAM_FLAG_MAP_BUFFERS), params, 1);
     if (connect_result < 0)
     {
         logger.log_error("ScreenCaptureStream", "error connecting to pipewire stream :c", true);
         return;
     }
 
-    spa_zero(m_pw_stream_events_listener);
 }
 
 void ScreenCaptureStream::on_stream_state_changed(pw_stream_state old, pw_stream_state state, const char *error)
@@ -261,19 +262,79 @@ void ScreenCaptureStream::on_stream_state_changed(pw_stream_state old, pw_stream
 
 void ScreenCaptureStream::on_stream_param_changed(u32 id, const spa_pod *param)
 {
+    if (param == nullptr)
+    {
+        logger.log("ScreenCaptureStream", "null param on_stream_param_changed, ignoring!", false);
+        return;
+    }
 
+    if (id == SPA_PARAM_Format)
+    {
+        spa_zero(m_spa_video_info);
+        spa_format_video_parse(param, &m_spa_video_info);
+    }
 }
 
 void ScreenCaptureStream::on_process()
 {
     pw_buffer* buffer = pw_stream_dequeue_buffer(m_pw_stream);
-    logger.log("ScreenCaptureStream", "on_process got a buffer! c:", true);
+
+    DynArray<Color> data;
+
+    spa_video_info_raw raw_info = m_spa_video_info.info.raw;
+
+    data.resize(raw_info.size.height * raw_info.size.width);
+
+    if (buffer->buffer->n_datas <= 0)
+    {
+        logger.log_error("ScreenCaptureStream", "No buffers recieved on_process? :c", true);
+        return;
+    }
     
+    spa_data& fragment_buf = (buffer->buffer->datas[0]);
+
+    if (!fragment_buf.data)
+    {
+        logger.log_error("ScreenCaptureStream", "Buffer data is null? :c", true);
+        return;
+    }
+
+    u8* fragment_data = (u8*)fragment_buf.data;
+
+    switch (raw_info.format)
+    {
+    case SPA_VIDEO_FORMAT_RGB:
+        for (usize i = 0; i < data.size(); i++)
+        {
+            data[i] = Color(fragment_data[i * 3], fragment_data[i * 3 + 1], fragment_data[i * 3 + 2], 255);
+        }
+        break;
+    
+    case SPA_VIDEO_FORMAT_RGBA:
+        for (usize i = 0; i < data.size(); i++)
+        {
+            data[i] = Color(fragment_data[i * 4], fragment_data[i * 4 + 1], fragment_data[i * 4 + 2], fragment_data[i * 4 + 3]);
+        }
+        break;
+
+    case SPA_VIDEO_FORMAT_BGRx:
+        for (usize i = 0; i < data.size(); i++)
+        {
+            data[i] = Color(fragment_data[i * 4 + 2], fragment_data[i * 4 + 1], fragment_data[i * 4], 255);
+        }
+        break;
+    default:
+        logger.log_error("ScreenCaptureStream", "Buffer is of unknown format? :c", true);
+        return;
+    }
+
     if (buffer == nullptr)
     {
         logger.log_error("ScreenCaptureStream", "Buffer is null? :c", true);
         return;
     }
+
+    on_data_received.broadcast(data, raw_info.size.width, raw_info.size.height);
 
     pw_stream_queue_buffer(m_pw_stream, buffer);
 }

@@ -31,7 +31,7 @@ void OvrOverlay::on_start()
     vr_texture->handle = (void*)(uintptr_t)(gl_texture_id);
     gl_context->unbind();
     
-    Color default_texture_data[4] = {{164, 64, 255, 255}, {164, 64, 255, 128}, {164, 64, 255, 64}, {164, 64, 255, 32}};
+    Color default_texture_data[4] = {{(u8)164, (u8)64, (u8)255, (u8)255}, {(u8)164, (u8)64, (u8)255, (u8)128}, {(u8)164, (u8)64, (u8)255, (u8)64}, {(u8)164, (u8)64, (u8)255, (u8)32}};
 
     set_texture_data(&default_texture_data[0], 2, 2);
 }
@@ -48,14 +48,19 @@ void OvrOverlay::on_tick(real delta_seconds)
 {
     Super::on_tick(delta_seconds);
 
-    Color default_texture_data[4] = {{164, 64, 255, 255}, {164, 64, 255, 128}, {164, 64, 255, 64}, {164, 64, 255, 32}};
+    //Color default_texture_data[4] = {{(u8)164, (u8)64, (u8)255, (u8)255}, {(u8)164, (u8)64, (u8)255, (u8)128}, {(u8)164, (u8)64, (u8)255, (u8)64}, {(u8)164, (u8)64, (u8)255, (u8)32}};
 
-    set_texture_data(&default_texture_data[0], 2, 2);
+    //set_texture_data(&default_texture_data[0], 2, 2);
 }
 
 OvrOverlay::Type OvrOverlay::get_overlay_type() const
 {
     return overlay_type;
+}
+
+bool OvrOverlay::is_null() const
+{
+    return overlay_type == Type::null;
 }
 
 void OvrOverlay::destroy_ovr_overlay()
@@ -103,8 +108,29 @@ void OvrOverlay::set_texture_data(const Color const* data, usize width, usize he
 {
     texture_data.resize(width * height);
 
-    std::memcpy(texture_data.data(), data, texture_data.size());
+    usize final_index = texture_data.size() - 1;
 
+    for (usize i = 0; i < width * height; i++)
+    {
+        texture_data[i].r = data[i].r * 255;
+        texture_data[i].g = data[i].g * 255;
+        texture_data[i].b = data[i].b * 255;
+        texture_data[i].a = data[i].a * 255;
+    }
+    
+    for (usize i = 0; i < height / 2; i++)
+    {
+        for (usize j = 0; j < width; j++)
+        {
+            usize top_index = i * width + j;
+            usize bottom_index = (height - i - 1) * width + j;
+
+            Color8 temp = texture_data[top_index];
+            texture_data[top_index] = texture_data[bottom_index];
+            texture_data[bottom_index] = temp;
+        }
+    }
+    
     gl_context->bind();
 
     glBindTexture(GL_TEXTURE_2D, gl_texture_id);

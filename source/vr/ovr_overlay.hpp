@@ -23,7 +23,8 @@ public:
     };
 
     [[nodiscard]] bool set_overlay_type(Type new_type);
-    Type get_overlay_type() const;
+    [[nodiscard]] Type get_overlay_type() const;
+    [[nodiscard]] bool is_null() const;
 
     void set_texture_data(const Color* data, usize width, usize height);
 
@@ -39,7 +40,7 @@ private:
     u64 handle = -1;
     u64 thumbnail_handle = -1;
     Type overlay_type = Type::null;
-    DynArray<Color> texture_data;
+    DynArray<Color8> texture_data;
     WeakPtr<class GlContext> gl_context = nullptr;
     u32 gl_texture_id = 0;
     vr::Texture_t* vr_texture = nullptr;

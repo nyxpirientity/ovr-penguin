@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
     source/vr/xrdevice.hpp source/vr/xrdevice.cpp
     source/vr/ovr_runtime.hpp source/vr/ovr_runtime.cpp
     source/vr/ovr_overlay.hpp source/vr/ovr_overlay.cpp
+    source/vr/ovr_window_overlay.cpp source/vr/ovr_window_overlay.hpp
     source/scene/root_node.hpp source/scene/root_node.cpp
     source/io/stdio_handler.hpp source/io/stdio_handler.cpp
     source/ovrpenguin.hpp source/ovrpenguin.cpp
@@ -30,7 +31,7 @@ add_executable(${PROJECT_NAME}
     source/types/mutex.hpp
     source/graphics/gl_context.cpp source/graphics/gl_context.hpp
     source/media/screen_capturer.cpp source/media/screen_capturer.hpp
-
+    
     third-party/glad/src/gl.c
     )
 
