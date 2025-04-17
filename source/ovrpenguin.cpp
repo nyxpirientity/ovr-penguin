@@ -201,16 +201,7 @@ void OvrPenguin::execute_command(const std::string& input)
             return;
         }
 
-        if (type_str == "dashboard")
-        {
-            overlay->set_overlay_type(OvrOverlay::Type::dashboard);
-        }
-        else
-        {
-            logger.log("OvrPenguin", "Unsupported type '" + type_str + "'...", true);
-        }
-
-        logger.log("OvrPenguin", "set window overlay type to '" + type_str + "' for overlay '" + name + "'!", true);
+        set_overlay_type(overlay, type_str);
     }
     else if (command.get_parameter(0) == "exec")
     {
@@ -313,6 +304,24 @@ void OvrPenguin::init_overlay_capture(WeakPtr<class OvrWindowOverlay> overlay)
     });
     
     overlay->reset_window_session();
+}
+
+void OvrPenguin::set_overlay_type(WeakPtr<class OvrWindowOverlay> overlay, const std::string &type_str)
+{
+    if (type_str == "dashboard")
+    {
+        overlay->set_overlay_type(OvrOverlay::Type::dashboard);
+    }
+    else if (type_str == "world")
+    {
+        overlay->set_overlay_type(OvrOverlay::Type::world);
+    }
+    else
+    {
+        logger.log("OvrPenguin", "Unsupported type '" + type_str + "'...", true);
+    }
+
+    logger.log("OvrPenguin", "set window overlay type to '" + type_str + "' for overlay '" + overlay->get_overlay_name() + "'!", true);
 }
 
 void OvrPenguin::init_next_overlay_capture()

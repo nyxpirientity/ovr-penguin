@@ -24,6 +24,8 @@ public:
 
     void init_overlay_capture(WeakPtr<class OvrWindowOverlay> overlay);
 
+    void set_overlay_type(WeakPtr<class OvrWindowOverlay> overlay, const std::string& type_str);
+
 private:
     void init_next_overlay_capture();
 
