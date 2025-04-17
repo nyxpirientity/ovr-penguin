@@ -33,6 +33,10 @@ public:
     [[nodiscard]] const std::string& get_overlay_name() const { return overlay_name; }
     [[nodiscard]] bool set_overlay_name(const std::string& in_name); 
 
+    void set_size(f64 new_size);
+    void set_curve(f64 new_curve);
+
+    void refresh_overlay_properties();
 
 protected:
     virtual void on_start() override;
@@ -52,6 +56,8 @@ private:
     vr::Texture_t* vr_texture = nullptr;
     std::string overlay_name = "ovr-penguin-overlay!";
 
+    f64 size = 1.0;
+    f64 curve = 0.0;
 };
 
 } // namespace nyxpiri::ovrpenguin

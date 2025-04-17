@@ -39,6 +39,7 @@ private:
 
     EventBinding screen_capture_data_received_binding;
     EventBinding screen_capture_session_started_binding;
+
 };
 
 } // namespace nyxpiri::ovrpenguin

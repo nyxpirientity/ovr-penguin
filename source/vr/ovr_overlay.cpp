@@ -157,6 +157,24 @@ void OvrOverlay::set_texture_data(DynArray<Color>&& data, usize width, usize hei
     gl_context->unbind();
 }
 
+void OvrOverlay::set_size(f64 new_size)
+{
+    size = new_size;
+    refresh_overlay_properties();
+}
+
+void OvrOverlay::set_curve(f64 new_curve)
+{
+    curve = new_curve;
+    refresh_overlay_properties();
+}
+
+void OvrOverlay::refresh_overlay_properties()
+{
+    vr::VROverlay()->SetOverlayWidthInMeters(handle, size);
+    vr::VROverlay()->SetOverlayCurvature(handle, curve);
+}
+
 bool OvrOverlay::set_overlay_name(const std::string &in_name)
 {
     overlay_name = in_name;

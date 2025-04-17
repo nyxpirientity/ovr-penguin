@@ -72,11 +72,12 @@ void OvrPenguin::execute_command(const std::string& input)
         logger.log("OvrPenguin", "- help", true);
         logger.log("OvrPenguin", "- stop", true);
         logger.log("OvrPenguin", "- ovr-init", true);
-        logger.log("OvrPenguin", "- new-window-overlay --name <name>", true);
+        logger.log("OvrPenguin", "- new-window-overlay --name <name> --type (optional) <type>", true);
         logger.log("OvrPenguin", "- list-window-overlays", true);
         logger.log("OvrPenguin", "- destroy-window-overlay --name <name>", true);
         logger.log("OvrPenguin", "- init-window-overlay-capture --name <name> [--all]", true);
         logger.log("OvrPenguin", "- set-window-overlay-type --name <name> --type <type>", true);
+        logger.log("OvrPenguin", "- set-window-overlay-properties --size <size> --curve <curvature (0.0 - 1.0)>", true);
         logger.log("OvrPenguin", "- exec --file <file>", true);
     }
     else if (command.get_parameter(0) == "ovr-init")
@@ -86,7 +87,13 @@ void OvrPenguin::execute_command(const std::string& input)
     }
     else if (command.get_parameter(0) == "new-window-overlay")
     {   
-        command.set_options({"--name"});
+        if (not ovr_runtime->is_running())
+        {
+            logger.log("OvrPenguin", "Cannot create a new overlay due to OpenVR not being initialized :c (you may need to call ovr-init still?)", true);
+            return;
+        }
+
+        command.set_options({"--name", "--type"});
         
         std::string name = command.get_option_parameter_copy("--name", 0);
 
@@ -99,6 +106,13 @@ void OvrPenguin::execute_command(const std::string& input)
         WeakPtr<OvrWindowOverlay> new_overlay = adopt(Node::construct<OvrWindowOverlay>(gl_context, screen_capturer));
         overlays.push_back(new_overlay);
         new_overlay->set_overlay_name(name);
+
+        std::string type_str = command.get_option_parameter_copy("--type", 0);
+
+        if (!type_str.empty())
+        {
+            set_overlay_type(new_overlay, type_str);
+        }
     }
     else if (command.get_parameter(0) == "list-window-overlays")
     {
@@ -202,6 +216,42 @@ void OvrPenguin::execute_command(const std::string& input)
         }
 
         set_overlay_type(overlay, type_str);
+    }
+    else if (command.get_parameter(0) == "set-window-overlay-properties")
+    {
+        command.set_options({"--name", "--size", "--curve"});
+
+        std::string name = command.get_option_parameter_copy("--name", 0);
+
+        if (name.empty())
+        {
+            logger.log("OvrPenguin", "resize-window-overlay --name parameter to denote the overlay name.", true);
+            return;
+        }
+
+        WeakPtr<OvrWindowOverlay> overlay = get_overlay_by_name(name);
+
+        if (overlay == nullptr)
+        {
+            logger.log("OvrPenguin", "couldn't find overlay of name '" + name + "' :c", true);
+            return;
+        }
+
+        std::string size_str = command.get_option_parameter_copy("--size", 0);
+
+        if (!size_str.empty())
+        {
+            f64 size = std::stod(size_str);
+            overlay->set_size(size);
+        }
+
+        std::string curve_str = command.get_option_parameter_copy("--curve", 0);
+
+        if (!curve_str.empty())
+        {
+            f64 curve = std::stod(curve_str);
+            overlay->set_curve(curve);
+        }
     }
     else if (command.get_parameter(0) == "exec")
     {
