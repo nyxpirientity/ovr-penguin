@@ -4,6 +4,8 @@
 #include "scene/node3d.hpp"
 #include "types/color.hpp"
 
+#include <string>
+
 namespace vr
 {
     class Texture_t;

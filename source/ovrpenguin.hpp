@@ -19,13 +19,16 @@ public:
 
     void execute_command(const std::string& input);
 
+    WeakPtr<class OvrWindowOverlay> get_overlay_by_name(const std::string& name);
+    usize get_overlay_index_by_name(const std::string& name);
+
 private:
     Logger logger;
     WeakPtr<class StdIoHandler> io_handler = nullptr;
     WeakPtr<class OvrRuntime> ovr_runtime = nullptr;
     WeakPtr<class GlContext> gl_context = nullptr;
     WeakPtr<class ScreenCapturer> screen_capturer = nullptr;
-    WeakPtr<class OvrWindowOverlay> test_overlay = nullptr;
+    DynArray<WeakPtr<class OvrWindowOverlay>> overlays;
 
     EventBinding input_event_binding;
 };

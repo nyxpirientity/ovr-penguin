@@ -21,6 +21,7 @@ public:
     ~OvrWindowOverlay();
 
     void reset_window_session();
+    void end_window_session();
 
 protected:
     virtual void on_start() override;

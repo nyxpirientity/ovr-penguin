@@ -2,6 +2,7 @@
 #define NODE_H
 
 #include "nyxmemory.hpp"
+#include <queue>
 #include "math/num_types.hpp"
 #include "types/nyxarrays.hpp"
 
@@ -19,17 +20,24 @@ public:
         return new T(args...);
     }
 
+    template<typename T>
+    static inline void destroy(UnownedPtr<T> ptr)
+    {
+        delete ptr;
+    }
+
     const DynArray<OwnerPtr<Node>>& get_children();
 
     template<typename T>
     WeakPtr<T> adopt(UnownedPtr<T> new_child)
     {
-        new_child->parent = this;
-        children.push_back(OwnerPtr<Node>(new_child));
+        adoption_queue.push(OwnerPtr<Node>{new_child});
+        new_child->parent = WeakPtr<Node>{this};
+
         return WeakPtr<T>{new_child};
     }
 
-    [[nodiscard]] UnownedPtr<Node> unadopt(usize index);
+    void queue_destroy();
 
     WeakPtr<Node> get_parent();
 
@@ -40,6 +48,8 @@ public:
     bool is_started() const;
 
     void stop_tree();
+    
+    usize find_child_index(WeakPtr<Node> child);
 
 protected:
     virtual void on_start() {}
@@ -47,7 +57,14 @@ protected:
     virtual void on_stop() {}
 
 private:
+    [[nodiscard]] UnownedPtr<Node> unadopt(usize index);
+    [[nodiscard]] UnownedPtr<Node> unadopt(WeakPtr<Node> child);
+
+private:
     DynArray<OwnerPtr<Node>> children;
+    std::queue<OwnerPtr<Node>> adoption_queue;
+    std::queue<WeakPtr<Node>> unadoption_queue;
+    bool destroy_queued = false;
     WeakPtr<Node> parent = nullptr;
 
     bool started = false;

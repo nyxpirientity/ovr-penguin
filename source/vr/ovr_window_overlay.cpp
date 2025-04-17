@@ -19,11 +19,24 @@ OvrWindowOverlay::~OvrWindowOverlay()
 
 void OvrWindowOverlay::reset_window_session()
 {
+    end_window_session();
+    
     screen_capture_stream = screen_capturer->create_stream();
     screen_capture_stream->on_data_received.bind(screen_capture_data_received_binding, [this](const DynArray<Color>& color, usize width, usize height)
     {
         set_texture_data(color.data(), width, height);
     });
+}
+
+void OvrWindowOverlay::end_window_session()
+{
+    if (!screen_capture_stream)
+    {
+        return;
+    }
+
+    screen_capturer->destroy_stream(screen_capture_stream);
+    screen_capture_stream = nullptr;
 }
 
 void OvrWindowOverlay::on_start()
@@ -34,6 +47,8 @@ void OvrWindowOverlay::on_start()
 void OvrWindowOverlay::on_stop()
 {
     Super::on_stop();
+
+    end_window_session();
 }
 
 void OvrWindowOverlay::on_tick(real delta_seconds)

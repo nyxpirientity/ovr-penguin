@@ -42,6 +42,7 @@ void OvrOverlay::on_stop()
     vr_texture->handle = nullptr;
 
     glDeleteTextures(1, &gl_texture_id);
+    destroy_ovr_overlay();
 }
 
 void OvrOverlay::on_tick(real delta_seconds)
@@ -65,6 +66,11 @@ bool OvrOverlay::is_null() const
 
 void OvrOverlay::destroy_ovr_overlay()
 {
+    if (is_null())
+    {
+        return;
+    }
+    
     vr::VROverlay()->DestroyOverlay(handle);
     overlay_type = Type::null;
     handle = -1;
@@ -104,7 +110,7 @@ bool OvrOverlay::set_overlay_type(Type new_type)
     return true;
 }
 
-void OvrOverlay::set_texture_data(const Color const* data, usize width, usize height)
+void OvrOverlay::set_texture_data(const Color* const data, usize width, usize height)
 {
     texture_data.resize(width * height);
     

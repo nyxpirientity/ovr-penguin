@@ -24,8 +24,24 @@ const GLibAutoPtr<XdpPortal>& ScreenCapturer::get_xdp_portal()
 
 WeakPtr<ScreenCaptureStream> ScreenCapturer::create_stream()
 {
-    streams.push_back(OwnerPtr<ScreenCaptureStream>{new ScreenCaptureStream(this, logger)});
-    return streams[streams.size() - 1].get();
+    streams.push_back(OwnerPtr<ScreenCaptureStream>{new ScreenCaptureStream(WeakPtr<ScreenCapturer>{this}, logger)});
+    return streams[streams.size() - 1];
+}
+
+void ScreenCapturer::destroy_stream(WeakPtr<ScreenCaptureStream>& stream)
+{
+    for (usize i = 0; i < streams.size(); i++)
+    {
+        if (stream != streams[i])
+        {
+            continue;
+        }
+
+        streams.erase(streams.begin() + i);
+        break;
+    }
+
+    stream = nullptr;
 }
 
 void ScreenCapturer::on_start()

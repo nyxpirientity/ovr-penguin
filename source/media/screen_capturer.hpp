@@ -66,6 +66,7 @@ public:
     pw_context* get_pw_context() { return m_pw_context;}
     
     WeakPtr<ScreenCaptureStream> create_stream();
+    void destroy_stream(WeakPtr<ScreenCaptureStream>& stream);
 
 protected:
     virtual void on_start() override;
