@@ -7,7 +7,6 @@
 
 namespace nyxpiri::ovrpenguin
 {
-
 OvrOverlay::OvrOverlay(WeakPtr<GlContext> in_gl_context)
 {
     gl_context = in_gl_context;
