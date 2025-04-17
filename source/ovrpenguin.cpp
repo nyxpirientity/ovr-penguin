@@ -6,6 +6,9 @@
 #include "graphics/gl_context.hpp"
 #include "media/screen_capturer.hpp"
 
+#include <filesystem>
+#include <fstream>
+
 namespace nyxpiri::ovrpenguin
 {
 OvrPenguin::OvrPenguin()
@@ -36,7 +39,7 @@ void OvrPenguin::on_tick(real delta_seconds)
         io_handler->async_print_string("> ");
         io_handler->async_await_input().bind(input_event_binding, [this](const std::string& input)
         {
-            logger.log("user", "entered: " + input, false);
+            logger.log("OvrPenguin", "user input command '" + input +"'", false);
             execute_command(input);
         });
     }
@@ -126,10 +129,20 @@ void OvrPenguin::execute_command(const std::string& input)
         command.set_options({"--name"});
 
         std::string name = command.get_option_parameter_copy("--name", 0);
+        bool all = command.has_parameter("--all") and name.empty();
 
-        if (name.empty())
+        if (name.empty() and not all)
         {
-            logger.log("OvrPenguin", "init-window-overlay-capture requires --name parameter to denote the overlay name.", true);
+            logger.log(
+                "OvrPenguin", 
+                "init-window-overlay-capture requires --name parameter to denote the overlay name. "
+                "Alternatively, you can use --all to initialize all overlays.", true);
+            return;
+        }
+
+        if (all)
+        {
+            
             return;
         }
 
@@ -182,6 +195,61 @@ void OvrPenguin::execute_command(const std::string& input)
         }
 
         logger.log("OvrPenguin", "set window overlay type to '" + type_str + "' for overlay '" + name + "'!", true);
+    }
+    else if (command.get_parameter(0) == "exec")
+    {
+        command.set_options({"--file"});
+
+        std::string file = command.get_option_parameter_copy("--file", 0);
+
+        if (file.empty())
+        {
+            logger.log("OvrPenguin", "exec requires --file parameter to denote the file to execute.", true);
+            return;
+        }
+        std::filesystem::path file_path(file);
+        file_path = std::filesystem::absolute(file_path);
+        std::ifstream file_stream(file_path);
+        
+        if (!std::filesystem::exists(file_path))
+        {
+            logger.log("OvrPenguin", "couldn't find file '" + file_path.string() + "' :c", true);
+            return;
+        }
+
+        if (!file_stream.is_open())
+        {
+            logger.log("OvrPenguin", "couldn't open file '" + file_path.string() + "' :c", true);
+            return;
+        }
+
+        std::string line;
+
+        std::getline(file_stream, line);
+        
+        if (line != "ovr-penguin-executable!~")
+        {
+            logger.log("OvrPenguin", "file '" + file + "' is not a valid ovr-penguin executable file... (first line must be 'ovr-penguin-executable!~')", true);
+            return;
+        }
+
+        while (std::getline(file_stream, line))
+        {
+            if (line.empty())
+            {
+                continue;
+            }
+
+            io_handler->async_print_string("> " + line + "\n");
+            logger.log("OvrPenguin", "exec executing command: '" + line + "'", false);
+            execute_command(line);
+        }
+
+        file_stream.close();
+    }
+    else if (command.get_parameter(0).find_first_of("//") == 0)
+    {
+        logger.log("OvrPenguin", "ignoring comment command: '" + command.get_raw_command() + "'", false);
     }
     else
     {

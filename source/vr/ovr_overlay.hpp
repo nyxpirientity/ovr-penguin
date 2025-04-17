@@ -28,7 +28,7 @@ public:
     [[nodiscard]] Type get_overlay_type() const;
     [[nodiscard]] bool is_null() const;
 
-    void set_texture_data(const Color* data, usize width, usize height);
+    void set_texture_data(DynArray<Color>&& data, usize width, usize height);
 
     [[nodiscard]] const std::string& get_overlay_name() const { return overlay_name; }
     [[nodiscard]] bool set_overlay_name(const std::string& in_name); 

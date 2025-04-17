@@ -22,9 +22,10 @@ void OvrWindowOverlay::reset_window_session()
     end_window_session();
     
     screen_capture_stream = screen_capturer->create_stream();
-    screen_capture_stream->on_data_received.bind(screen_capture_data_received_binding, [this](const DynArray<Color>& color, usize width, usize height)
+    screen_capture_stream->on_data_received.bind(screen_capture_data_received_binding, [this](DynArray<Color>& color, usize width, usize height)
     {
-        set_texture_data(color.data(), width, height);
+        set_texture_data(std::move(color), width, height);
+        color.clear();
     });
 }
 

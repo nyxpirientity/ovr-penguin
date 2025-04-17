@@ -31,9 +31,9 @@ void OvrOverlay::on_start()
     vr_texture->handle = (void*)(uintptr_t)(gl_texture_id);
     gl_context->unbind();
     
-    Color default_texture_data[4] = {{(u8)164, (u8)64, (u8)255, (u8)255}, {(u8)164, (u8)64, (u8)255, (u8)128}, {(u8)164, (u8)64, (u8)255, (u8)64}, {(u8)164, (u8)64, (u8)255, (u8)32}};
+    DynArray<Color> default_texture_data = {{(u8)164, (u8)64, (u8)255, (u8)255}, {(u8)164, (u8)64, (u8)255, (u8)128}, {(u8)164, (u8)64, (u8)255, (u8)64}, {(u8)164, (u8)64, (u8)255, (u8)32}};
 
-    set_texture_data(&default_texture_data[0], 2, 2);
+    set_texture_data(std::move(default_texture_data), 2, 2);
 }
 
 void OvrOverlay::on_stop()
@@ -61,7 +61,7 @@ OvrOverlay::Type OvrOverlay::get_overlay_type() const
 
 bool OvrOverlay::is_null() const
 {
-    return overlay_type == Type::null;
+    return overlay_type == Type::null or vr::VROverlay() == nullptr;
 }
 
 void OvrOverlay::destroy_ovr_overlay()
@@ -110,11 +110,11 @@ bool OvrOverlay::set_overlay_type(Type new_type)
     return true;
 }
 
-void OvrOverlay::set_texture_data(const Color* const data, usize width, usize height)
+void OvrOverlay::set_texture_data(DynArray<Color>&& data, usize width, usize height)
 {
-    texture_data.resize(width * height);
-    
-    std::memcpy(&texture_data[0], data, width * height * sizeof(Color));
+    texture_data = std::move(data);
+    data.clear();
+    data.reserve(data.size());
 
     for (usize i = 0; i < height / 2; i++)
     {

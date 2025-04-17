@@ -23,7 +23,7 @@ public:
     ~ScreenCaptureStream();
 
 public:
-    Event<const DynArray<Color>&, usize, usize> on_data_received;
+    Event<DynArray<Color>&, usize, usize> on_data_received;
 
 public:
     void debug_log_info();

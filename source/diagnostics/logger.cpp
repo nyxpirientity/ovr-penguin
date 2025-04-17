@@ -6,12 +6,22 @@ namespace nyxpiri::ovrpenguin
 Logger::Logger()
 {
     log_out_stream.lock().data().open("ovrpenguin_log.txt", std::ofstream::app);
+    print("\n"
+        "--------================================--------\n"
+        "--------======== NEW LOG START! ========--------\n"
+        "--------================================--------\n\n"
+        , false);
     log("logger", "Logger object constructed!", false);
 }
 
 Logger::~Logger()
 {
     log("logger", "Logger object being destroyed...", false);
+    print("\n"
+        "--------==========================--------\n"
+        "--------======== LOG END! ========--------\n"
+        "--------==========================--------\n\n"
+        , false);
 }
 
 void Logger::log(const std::string& log_source_name, const std::string& message, bool terminal_output)

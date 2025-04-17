@@ -83,7 +83,7 @@ public:
         return parameters.size() > index;
     }
 
-    usize find_parameter(const std::string& parameter)
+    usize find_parameter(const std::string& parameter) const
     {
         for (usize i = 0; i < parameters.size(); i++)
         {
@@ -95,6 +95,13 @@ public:
 
         return -1;
     }
+
+        
+    bool has_parameter(const std::string& parameter) const
+    {
+        return (find_parameter(parameter) != -1);
+    }
+
 
     void set_options(const std::vector<std::string>& in_options)
     {
@@ -188,7 +195,7 @@ public:
         return copy;
     }
 
-    std::string_view get_raw_command() const
+    const std::string& get_raw_command() const
     {
         return raw_command;
     }
