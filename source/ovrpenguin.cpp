@@ -34,7 +34,7 @@ void OvrPenguin::on_tick(real delta_seconds)
 {
     Super::on_tick(delta_seconds);
 
-    if (!input_event_binding.is_bound())
+    if (!input_event_binding.is_bound() and wait_for_input)
     {
         io_handler->async_print_string("> ");
         io_handler->async_await_input().bind(input_event_binding, [this](const std::string& input)
@@ -53,6 +53,7 @@ void OvrPenguin::on_stop()
 void OvrPenguin::execute_command(const std::string& input)
 {
     StringCommand command{input};
+    wait_for_input = true;
 
     if (not command.has_parameter(0))
     {
@@ -64,6 +65,19 @@ void OvrPenguin::execute_command(const std::string& input)
     {
         logger.log("OvrPenguin", "stopping tree", true);
         stop_tree();
+    }
+    else if (command.get_parameter(0) == "help")
+    {
+        logger.log("OvrPenguin", "Available commands!", true);
+        logger.log("OvrPenguin", "- help", true);
+        logger.log("OvrPenguin", "- stop", true);
+        logger.log("OvrPenguin", "- ovr-init", true);
+        logger.log("OvrPenguin", "- new-window-overlay --name <name>", true);
+        logger.log("OvrPenguin", "- list-window-overlays", true);
+        logger.log("OvrPenguin", "- destroy-window-overlay --name <name>", true);
+        logger.log("OvrPenguin", "- init-window-overlay-capture --name <name> [--all]", true);
+        logger.log("OvrPenguin", "- set-window-overlay-type --name <name> --type <type>", true);
+        logger.log("OvrPenguin", "- exec --file <file>", true);
     }
     else if (command.get_parameter(0) == "ovr-init")
     {
@@ -142,7 +156,9 @@ void OvrPenguin::execute_command(const std::string& input)
 
         if (all)
         {
-            
+            wait_for_input = false;
+            current_window_overlay_capture_init_index = 0;
+            init_next_overlay_capture();
             return;
         }
 
@@ -281,6 +297,45 @@ usize OvrPenguin::get_overlay_index_by_name(const std::string &name)
     }
 
     return -1;
+}
+
+void OvrPenguin::init_overlay_capture(WeakPtr<class OvrWindowOverlay> overlay)
+{
+    overlay->on_window_session_started.bind(init_window_overlay_capture_log_binding, [this, overlay](Result<> result)
+    {
+        if (result.is_error())
+        {
+            logger.log("OvrPenguin", "failed to initialize window overlay window capture for '" + overlay->get_overlay_name() + "' :c", true);
+            return;
+        }
+
+        logger.log("OvrPenguin", "initialized window overlay window capture for '" + overlay->get_overlay_name() + "'! c:", true);
+    });
+    
+    overlay->reset_window_session();
+}
+
+void OvrPenguin::init_next_overlay_capture()
+{
+    if (current_window_overlay_capture_init_index >= overlays.size())
+    {
+        logger.log("OvrPenguin", "finished initializing all overlays window capturing! c:", true);
+        wait_for_input = true;
+        current_window_overlay_capture_init_index = -1;
+        return;
+    }
+
+    WeakPtr<OvrWindowOverlay> overlay = overlays[current_window_overlay_capture_init_index];
+    current_window_overlay_capture_init_index++;
+
+    overlay->on_window_session_started.bind(init_all_window_overlay_capture_binding, [this](Result<> result)
+    {
+        init_next_overlay_capture();
+    });
+
+    logger.log("OvrPenguin", "initializing window overlay window capture for '" + overlay->get_overlay_name() + "'...", true);
+
+    init_overlay_capture(overlay);
 }
 
 } // namespace nyxpiri::ovrpenguin

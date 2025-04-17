@@ -22,6 +22,11 @@ public:
     WeakPtr<class OvrWindowOverlay> get_overlay_by_name(const std::string& name);
     usize get_overlay_index_by_name(const std::string& name);
 
+    void init_overlay_capture(WeakPtr<class OvrWindowOverlay> overlay);
+
+private:
+    void init_next_overlay_capture();
+
 private:
     Logger logger;
     WeakPtr<class StdIoHandler> io_handler = nullptr;
@@ -29,8 +34,12 @@ private:
     WeakPtr<class GlContext> gl_context = nullptr;
     WeakPtr<class ScreenCapturer> screen_capturer = nullptr;
     DynArray<WeakPtr<class OvrWindowOverlay>> overlays;
+    usize current_window_overlay_capture_init_index = -1;
+    bool wait_for_input = true;
 
     EventBinding input_event_binding;
+    EventBinding init_window_overlay_capture_log_binding;
+    EventBinding init_all_window_overlay_capture_binding;
 };
 
 } // namespace nyxpiri::ovrpenguin

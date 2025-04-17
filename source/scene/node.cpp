@@ -77,13 +77,12 @@ void Node::tick(real delta_seconds)
         usize child_index = find_child_index(unadoption_queue.front());
         unadoption_queue.pop();
 
-        if(children[child_index]->destroy_queued)
-        {
-            children[child_index]->stop();
-            Node::destroy(children[child_index].release());
-        }
+        UnownedPtr<Node> child = unadopt(child_index);
 
-        children.erase(children.begin() + child_index);
+        if(child->destroy_queued)
+        {
+            Node::destroy(child);
+        }
     }
 
     while(not adoption_queue.empty())

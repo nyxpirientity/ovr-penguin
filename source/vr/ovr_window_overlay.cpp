@@ -27,6 +27,11 @@ void OvrWindowOverlay::reset_window_session()
         set_texture_data(std::move(color), width, height);
         color.clear();
     });
+
+    screen_capture_stream->on_screencast_started.bind(screen_capture_session_started_binding, [this](Result<> result)
+    {
+        on_window_session_started.broadcast(result);
+    });
 }
 
 void OvrWindowOverlay::end_window_session()

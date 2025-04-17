@@ -123,7 +123,6 @@ void ScreenCaptureStream::debug_log_info()
     if (session)
     {
         logger.log("ScreenCaptureStream", "XdpSession state is " + std::to_string(xdp_session_get_session_state(session)), true);
-        
     }
 }
 
@@ -136,6 +135,7 @@ void ScreenCaptureStream::on_screencast_session_created(GObject *source_object, 
     {
         // TODO: Probably a better way to handle this?
         logger.log_error("ScreenCaptureStream", format_gerror_string("Screencast XdpSession creation failed :c", *error), true);
+        on_screencast_started.broadcast({format_gerror_string("Screencast XdpSession creation failed :c", *error), -1});
         return;
     }
 
@@ -153,6 +153,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     if (error)
     {
         logger.log_error("ScreenCaptureStream", format_gerror_string("Screencast XdpSession start failed :c", *error), true);
+        on_screencast_started.broadcast({format_gerror_string("Screencast XdpSession start failed :c", *error), -1});
         return;
     }
 
@@ -161,6 +162,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     if (session_type != XDP_SESSION_SCREENCAST)
     {
         logger.log_error("ScreenCaptureStream", std::string("Somehow got wrong XdpSessionType? :c '") + std::to_string(session_type), true);
+        on_screencast_started.broadcast({format_gerror_string("Somehow got wrong XdpSessionType? :c '" + std::to_string(session_type), *error), -1});
         return;
     }
 
@@ -174,6 +176,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     else
     {
         logger.log_error("ScreenCaptureStream", "Current status isn't active... :c", true);
+        on_screencast_started.broadcast({format_gerror_string("Current status isn't active... :c", *error), -1});
         return;
     }
 
@@ -182,6 +185,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     if (g_variant_n_children(xdp_session_streams) <= 0)
     {
         logger.log_error("ScreenCaptureStream", "No streams in XdpSession? :c", true);
+        on_screencast_started.broadcast({format_gerror_string("No streams in XdpSession? :c", *error), -1});
         return;
     }
 
@@ -190,6 +194,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     if (not g_variant_is_of_type(xdp_pw_node_id, G_VARIANT_TYPE_UINT32))
     {
         logger.log_error("ScreenCaptureStream", "XdpSession attempt to get pipewire node ID returned a non-uint32 value? :c", true);
+        on_screencast_started.broadcast({format_gerror_string("XdpSession attempt to get pipewire node ID returned a non-uint32 value? :c", *error), -1});
         return;
     }
 
@@ -227,9 +232,12 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     if (connect_result < 0)
     {
         logger.log_error("ScreenCaptureStream", "error connecting to pipewire stream :c", true);
+        on_screencast_started.broadcast({format_gerror_string("error connecting to pipewire stream :c", *error), -1});
         return;
     }
 
+    on_screencast_started.broadcast({});
+    logger.log("ScreenCaptureStream", "Screencast stream connected! (pipewire + permissions handled!) c:", false);
 }
 
 void ScreenCaptureStream::on_stream_state_changed(pw_stream_state old, pw_stream_state state, const char *error)

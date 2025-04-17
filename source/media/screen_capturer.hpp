@@ -4,6 +4,7 @@
 #include "scene/node.hpp"
 #include "types/event.hpp"
 #include "types/color.hpp"
+#include "types/result.hpp"
 #include "math/num_types.hpp"
 
 #include "nyxpiri_glib_abst/glib_auto_ptr.hpp"
@@ -23,7 +24,9 @@ public:
     ~ScreenCaptureStream();
 
 public:
+    // params: fragment_buffer, width, height
     Event<DynArray<Color>&, usize, usize> on_data_received;
+    Event<Result<>> on_screencast_started;
 
 public:
     void debug_log_info();

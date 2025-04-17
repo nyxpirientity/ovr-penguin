@@ -103,8 +103,7 @@ int main(int argc, char** argv)
     std::cout << "Welcome to OVR Penguin, a CLI utility for reducing the shortcomings of SteamVR on Linux Wayland systems!\n"
                  "Input 'help' for guidance on how to use OVR Penguin.\n"
                  "OVR Penguin uses profiles, which are to save and load setups/states. By default, you are loaded into an empty profile.\n"
-                 "Due to SteamVR printing to standard out automatically, OVRPenguin will not initialize OpenVR until you enter the command 'ovr-init'.\n"
-                 "It is advised to launch SteamVR *before* launching OVRPenguin.\n";
+                 "Due to SteamVR printing to standard out automatically, OVRPenguin will not initialize/connect to OpenVR until you enter the command 'ovr-init'.\n";
     
     RootNode* root_node = new RootNode();
     root_node->adopt(Node::construct<OvrPenguin>());

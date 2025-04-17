@@ -5,6 +5,7 @@
 #include "types/color.hpp"
 #include "types/event.hpp"
 #include "ovr_overlay.hpp"
+#include "types/result.hpp"
 
 namespace vr
 {
@@ -19,6 +20,8 @@ class OvrWindowOverlay : public OvrOverlay
 public:
     OvrWindowOverlay(WeakPtr<class GlContext> in_gl_context, WeakPtr<class ScreenCapturer> in_screen_capturer);
     ~OvrWindowOverlay();
+
+    Event<Result<>> on_window_session_started;
 
     void reset_window_session();
     void end_window_session();
@@ -35,6 +38,7 @@ private:
     WeakPtr<class ScreenCaptureStream> screen_capture_stream = nullptr;
 
     EventBinding screen_capture_data_received_binding;
+    EventBinding screen_capture_session_started_binding;
 };
 
 } // namespace nyxpiri::ovrpenguin
