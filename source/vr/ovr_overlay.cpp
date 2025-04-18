@@ -3,6 +3,9 @@
 #include "graphics/gl_context.hpp"
 #include <glad/gl.h>
 #include <cassert>
+#include "math/quat.hpp"
+#include "math/mat4x4.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 #include <cstring>
 
 namespace nyxpiri::ovrpenguin
@@ -48,10 +51,48 @@ void OvrOverlay::on_tick(real delta_seconds)
 {
     Super::on_tick(delta_seconds);
 
-    //Color default_texture_data[4] = {{(u8)164, (u8)64, (u8)255, (u8)255}, {(u8)164, (u8)64, (u8)255, (u8)128}, {(u8)164, (u8)64, (u8)255, (u8)64}, {(u8)164, (u8)64, (u8)255, (u8)32}};
+    vr::TrackedDeviceIndex_t device_index = -1;
+    vr::HmdMatrix34_t ovr_transform;
+    Mat4x4 transform;
+    Quat quaternion;
+    transform = glm::translate(transform, position);
+    transform = glm::rotate(transform, glm::angle(quaternion), glm::axis(quaternion));
 
-    //set_texture_data(&default_texture_data[0], 2, 2);
-    //vr::VROverlay()->SetOverlayTransformTrackedDeviceRelative(handle, ???, )
+    ovr_transform.m[0][0] = transform[0][0];
+    ovr_transform.m[1][0] = transform[1][0];
+    ovr_transform.m[2][0] = transform[2][0];
+    
+    ovr_transform.m[0][1] = transform[0][1];
+    ovr_transform.m[1][1] = transform[1][1];
+    ovr_transform.m[2][1] = transform[2][1];
+
+    ovr_transform.m[0][2] = transform[0][2];
+    ovr_transform.m[1][2] = transform[1][2];
+    ovr_transform.m[2][2] = transform[2][2];
+
+    ovr_transform.m[0][3] = transform[0][3];
+    ovr_transform.m[1][3] = transform[1][3];
+    ovr_transform.m[2][3] = transform[2][3];
+
+    switch (parent)
+    {
+    case OverlayParent::HeadMountedDisplay:
+        device_index = vr::k_unTrackedDeviceIndex_Hmd;
+        [[fallthrough]];
+    
+    case OverlayParent::LeftMotionController:
+        device_index = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
+        [[fallthrough]];
+    
+    case OverlayParent::RightMotionController:
+        device_index = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
+        vr::VROverlay()->SetOverlayTransformTrackedDeviceRelative(handle, device_index, &ovr_transform);
+        break;
+    
+    case OverlayParent::PlaySpace:
+        vr::VROverlay()->SetOverlayTransformAbsolute(handle, vr::ETrackingUniverseOrigin::TrackingUniverseStanding, &ovr_transform);
+        break;
+    }
 }
 
 OvrOverlay::Type OvrOverlay::get_overlay_type() const
@@ -192,6 +233,21 @@ bool OvrOverlay::set_overlay_name(const std::string &in_name)
     }
 
     return true;
+}
+
+void OvrOverlay::set_overlay_parent(OverlayParent new_parent)
+{
+    parent = new_parent;
+}
+
+void OvrOverlay::set_overlay_position(const Vec3 &new_pos)
+{
+    position = new_pos;
+}
+
+void OvrOverlay::set_overlay_rotation(const Vec3 &new_rot)
+{
+    rotation = new_rot;
 }
 
 } // namespace nyxpiri::ovrpenguin

@@ -12,10 +12,8 @@ add_executable(${PROJECT_NAME}
     source/scene/node.hpp source/scene/node.cpp
     source/math/vec3.hpp
     source/math/num_types.hpp
-    source/math/vec2.hpp
     source/scene/node3d.hpp source/scene/node3d.cpp
     source/math/mat4x4.hpp
-    source/math/vec4.hpp
 
     source/nyxmemory.hpp
     source/types/nyxarrays.hpp

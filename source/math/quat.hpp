@@ -17,6 +17,9 @@ public:
     Quat(real w, real x, real y, real z)
     : Super(w, x, y, z) {}
 
+    Quat(const Vec3& euler_angles)
+    : Super(euler_angles) {}
+
     static const Quat IDENTITY;
 };
 

@@ -13,6 +13,12 @@ namespace vr
 }
 namespace nyxpiri::ovrpenguin
 {
+enum class OverlayParent : u8
+{
+    PlaySpace,
+    LeftMotionController, RightMotionController,
+    HeadMountedDisplay
+};
 
 class OvrOverlay : public Node
 {
@@ -33,6 +39,10 @@ public:
 
     [[nodiscard]] const std::string& get_overlay_name() const { return overlay_name; }
     [[nodiscard]] bool set_overlay_name(const std::string& in_name); 
+
+    void set_overlay_parent(OverlayParent new_parent);
+    void set_overlay_position(const Vec3& new_pos);
+    void set_overlay_rotation(const Vec3& new_rot);
 
     void set_size(f64 new_size);
     void set_curve(f64 new_curve);
@@ -56,7 +66,8 @@ private:
     u32 gl_texture_id = 0;
     vr::Texture_t* vr_texture = nullptr;
     std::string overlay_name = "ovr-penguin-overlay!";
-    
+    OverlayParent parent = OverlayParent::PlaySpace;
+
     Vec3 position;
     Vec3 rotation;
 

@@ -21,6 +21,16 @@ public:
 
     Mat4x4(col_type a, col_type b, col_type c, col_type d)
     : Super(a, b, c ,d) {}
+
+    Mat4x4& operator=(const glm::mat<4, 4, real, glm::defaultp>& other)
+    {
+        (*this)[0] = other[0];
+        (*this)[1] = other[1];
+        (*this)[2] = other[2];
+        (*this)[3] = other[3];
+
+        return *this;
+    }
 };
 } // namespace nyxpiri::ovrpenguin
 #endif // MAT4X4_HPP

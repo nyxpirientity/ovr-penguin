@@ -268,7 +268,7 @@ void OvrPenguin::execute_command(const std::string& input)
     }
     else if (command.get_parameter(0) == "set-window-overlay-properties")
     {
-        command.set_options({"--name", "--size", "--curve"});
+        command.set_options({"--name", "--size", "--curve", "--parent", "--position", "--rotation"});
 
         std::string name = command.get_option_parameter_copy("--name", 0);
 
@@ -277,7 +277,7 @@ void OvrPenguin::execute_command(const std::string& input)
             logger.log("OvrPenguin", "resize-window-overlay requires --name parameter to denote the overlay name.", true);
             return;
         }
-
+        
         WeakPtr<OvrWindowOverlay> overlay = get_overlay_by_name(name);
 
         if (overlay == nullptr)
@@ -300,6 +300,54 @@ void OvrPenguin::execute_command(const std::string& input)
         {
             f64 curve = std::stod(curve_str);
             overlay->set_curve(curve);
+        }
+
+        std::string parent_str = command.get_option_parameter_copy("--parent", 0);
+
+        if (!parent_str.empty())
+        {
+            if (parent_str == "left-hand")
+            {
+                overlay->set_overlay_parent(OverlayParent::LeftMotionController);
+            }
+            else if (parent_str == "right-hand")
+            {
+                overlay->set_overlay_parent(OverlayParent::RightMotionController);
+            }
+            else if (parent_str == "hmd" or parent_str == "headset")
+            {
+                overlay->set_overlay_parent(OverlayParent::HeadMountedDisplay);
+            }
+            else if (parent_str == "origin")
+            {
+                overlay->set_overlay_parent(OverlayParent::PlaySpace);
+            }
+        }
+
+        std::string posx_str = command.get_option_parameter_copy("--position", 0);
+        std::string posy_str = command.get_option_parameter_copy("--position", 1);
+        std::string posz_str = command.get_option_parameter_copy("--position", 2);
+
+        if (!posx_str.empty() and !posy_str.empty() and !posz_str.empty())
+        {
+            f64 x = std::stod(posx_str);
+            f64 y = std::stod(posy_str);
+            f64 z = std::stod(posz_str);
+
+            overlay->set_overlay_position({x, y, z});
+        }
+
+        std::string rotx_str = command.get_option_parameter_copy("--rotation", 0);
+        std::string roty_str = command.get_option_parameter_copy("--rotation", 1);
+        std::string rotz_str = command.get_option_parameter_copy("--rotation", 2);
+
+        if (!rotx_str.empty() and !roty_str.empty() and !rotz_str.empty())
+        {
+            f64 x = std::stod(rotx_str);
+            f64 y = std::stod(roty_str);
+            f64 z = std::stod(rotz_str);
+
+            overlay->set_overlay_rotation({x, y, z});
         }
     }
     else if (command.get_parameter(0) == "refresh-aliases")

@@ -45,9 +45,6 @@ void OvrRuntime::on_tick(real delta_seconds)
     ovr_data->tracked_devices.clear();
     ovr_data->tracked_devices.reserve(vr::k_unMaxTrackedDeviceCount);
     vr::VRSystem()->GetDeviceToAbsoluteTrackingPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, 0.0, &(ovr_data->raw_tracked_device_poses[0]), ovr_data->raw_tracked_device_poses.size());
-    vr::k_unTrackedDeviceIndex_Hmd;
-    vr::VRSystem()->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
-    vr::VRSystem()->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
     for (usize i = 0; i < ovr_data->raw_tracked_device_poses.size(); i++)
     {
         vr::TrackedDevicePose_t& pose = ovr_data->raw_tracked_device_poses[i];
@@ -61,10 +58,10 @@ void OvrRuntime::on_tick(real delta_seconds)
         vr::HmdMatrix34_t ovr_matrix = device.pose.mDeviceToAbsoluteTracking; 
         device.ovr_device_index = i;
         device.matrix = Mat4x4{
-            ovr_matrix.m[0][0], ovr_matrix.m[1][0], ovr_matrix.m[2][0], 0.0,
-            ovr_matrix.m[0][1], ovr_matrix.m[1][1], ovr_matrix.m[2][1], 0.0,
-            ovr_matrix.m[0][2], ovr_matrix.m[1][2], ovr_matrix.m[2][2], 0.0,
-            ovr_matrix.m[0][3], ovr_matrix.m[1][3], ovr_matrix.m[2][3], 1.0
+            {ovr_matrix.m[0][0], ovr_matrix.m[1][0], ovr_matrix.m[2][0], 0.0},
+            {ovr_matrix.m[0][1], ovr_matrix.m[1][1], ovr_matrix.m[2][1], 0.0},
+            {ovr_matrix.m[0][2], ovr_matrix.m[1][2], ovr_matrix.m[2][2], 0.0},
+            {ovr_matrix.m[0][3], ovr_matrix.m[1][3], ovr_matrix.m[2][3], 1.0}
         };
         
         ovr_data->tracked_devices.push_back(device);
