@@ -115,6 +115,8 @@ int main(int argc, char** argv)
                  "Input 'help' for guidance on how to use OVR Penguin.\n"
                  "OVRPenguin will not initialize/connect to OpenVR until you enter the command 'ovr-init'.\n\n";
     
+    StringCommand command_test{"this is \"a test command\" for testing\" quotes, like how\"\" \"that other one shouldn't work right, however,\"this should seperate interestingly."};
+
     RootNode* root_node = new RootNode();
     root_node->adopt(Node::construct<OvrPenguin>());
 

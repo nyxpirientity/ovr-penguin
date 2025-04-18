@@ -16,7 +16,13 @@ public:
         reset(in_command);
     }
 
-    void reset(const std::string& in_command)
+    template<typename StringType>
+    static usize find_first_delimitter(const StringType& string, usize index)
+    {
+        return std::min(std::min(string.find_first_of("\t", index), string.find_first_of(" ", index)), string.find_first_of("\n", index));
+    }
+
+    bool reset(const std::string& in_command)
     {
         parameters.clear();
         raw_command = in_command;
@@ -25,8 +31,23 @@ public:
 
         while(index < raw_command.size())
         {
-            usize seperator_index = std::min(std::min(raw_command.find_first_of("\t", index), raw_command.find_first_of(" ", index)), raw_command.find_first_of("\n", index));
+            usize seperator_index = find_first_delimitter(raw_command, index);
             
+            if (raw_command[index] == '\"')
+            {
+                usize closing_quote_index = raw_command.find_first_of("\"", index + 1);
+
+                if (closing_quote_index == std::string::npos)
+                {
+                    valid = false;
+                    return false;
+                }
+
+                seperator_index = closing_quote_index;
+
+                index += 1;
+            }
+
             std::string_view param;
 
             if(seperator_index != std::string::npos)
@@ -48,6 +69,9 @@ public:
 
             parameters.push_back(param);
         }
+
+        valid = true;
+        return true;
     }
 
     std::string_view get_parameter(usize index)
@@ -200,11 +224,18 @@ public:
         return raw_command;
     }
 
+    bool is_valid()
+    {
+        return valid;
+    }
+
 private:
     std::string raw_command;
     std::vector<std::string_view> parameters;
     std::vector<std::string> options;
     std::vector<std::vector<std::string_view>> option_parameters;
+
+    bool valid = false;
 };
 } // namespace nyxpiri::ovrpenguin
 

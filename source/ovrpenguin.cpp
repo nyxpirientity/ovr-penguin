@@ -78,11 +78,24 @@ void OvrPenguin::execute_command(const std::string& input)
         }
 
         std::string new_input = aliases[i].second;
+        new_input.push_back(' ');
         for (usize i = 1; i < command.parameter_count(); i++)
         {
-            // todo: this is going to work pretty badly once quotation marks are supported...
-            new_input.push_back(' ');
+            bool contains_spaces = StringCommand::find_first_delimitter(command.get_parameter(i), 0);
+
+            if (contains_spaces)
+            {
+                new_input.push_back('\"');
+            }
+
             new_input.append(command.get_parameter(i));
+
+            if (contains_spaces)
+            {
+                new_input.push_back('\"');
+            }
+
+            new_input.push_back(' ');
         }
         
         command.reset(new_input); 
@@ -254,7 +267,7 @@ void OvrPenguin::execute_command(const std::string& input)
 
         if (name.empty())
         {
-            logger.log("OvrPenguin", "resize-window-overlay --name parameter to denote the overlay name.", true);
+            logger.log("OvrPenguin", "resize-window-overlay requires --name parameter to denote the overlay name.", true);
             return;
         }
 
@@ -294,6 +307,49 @@ void OvrPenguin::execute_command(const std::string& input)
         {
             logger.log("OvrPenguin", "- " + alias.first + " => " + alias.second, true);
         }
+    }
+    else if (command.get_parameter(0) == "new-alias")
+    {
+        command.set_options({"--file", "--name", "--value"});
+
+        std::string name = command.get_option_parameter_copy("--name", 0);
+        std::string value = command.get_option_parameter_copy("--value", 0);
+
+        if (name.empty() or value.empty())
+        {
+            logger.log("OvrPenguin", "new-alias requires --name and --value parameter to specify the name and value of the alias :c", true);
+            return;
+        }
+
+        std::filesystem::path file_path = command.get_option_parameter_copy("--file", 0);
+
+        if (file_path.empty())
+        {
+            file_path = get_aliases_dir() / "default";
+        }
+        else
+        {
+            if (!file_path.is_absolute())
+            {
+                file_path = get_aliases_dir() / file_path;
+            }
+        }
+        
+        bool making_new_file = not std::filesystem::exists(file_path);
+
+        if (not making_new_file and std::filesystem::is_directory(file_path))
+        {
+            logger.log("OvrPenguin", "Couldn't write new alias to " + file_path.string() + ", as it seemed to be a directory :c", true);
+            return;
+        }
+
+        std::ofstream output_stream{file_path, std::ios_base::app};
+
+        output_stream.write("ovr-penguin-aliases!~\n", 22);
+        std::string alias_string = ("\"" + name + "\" \"" + value + "\"");
+        output_stream.write(alias_string.c_str(), alias_string.size());
+        
+        output_stream.close();
     }
     else if (command.get_parameter(0) == "exec")
     {
@@ -469,13 +525,28 @@ void OvrPenguin::refresh_aliases()
             
             for (usize i = 1; i < line_command.parameter_count(); i++)
             {
+                bool contains_spaces = StringCommand::find_first_delimitter(line_command.get_parameter(i), 0);
+
+                if (contains_spaces)
+                {
+                    alias_value.push_back('\"');
+                }
+                
                 alias_value.append(line_command.get_parameter(i));
+                
+                if (contains_spaces)
+                {
+                    alias_value.push_back('\"');
+                }
+
                 alias_value.push_back(' ');
             }
             
 
             aliases.push_back({line_command.copy_parameter(0), alias_value});
         }
+
+        file_input_stream.close();
     }
 }
 
