@@ -61,8 +61,8 @@ void OvrOverlay::on_tick(real delta_seconds)
     vr::HmdMatrix34_t ovr_transform;
     Mat4x4 transform{1.0};
     Quat quaternion{Vec3{glm::radians(rotation.x), glm::radians(rotation.y), glm::radians(rotation.z)}};
-    transform = glm::rotate(transform, glm::angle(quaternion), glm::axis(quaternion));
     transform = glm::translate(transform, position);
+    transform = glm::rotate(transform, glm::angle(quaternion), glm::axis(quaternion));
 
     ovr_transform.m[0][0] = transform[0][0];
     ovr_transform.m[0][1] = transform[0][1];
@@ -196,10 +196,20 @@ void OvrOverlay::set_texture_data(DynArray<Color>&& data, usize width, usize hei
     gl_context->unbind();
 }
 
+f64 OvrOverlay::get_size()
+{
+    return size;
+}
+
 void OvrOverlay::set_size(f64 new_size)
 {
     size = new_size;
     refresh_overlay_properties();
+}
+
+f64 OvrOverlay::get_curve()
+{
+    return curve;
 }
 
 void OvrOverlay::set_curve(f64 new_curve)
@@ -233,14 +243,29 @@ bool OvrOverlay::set_overlay_name(const std::string &in_name)
     return true;
 }
 
+OverlayParent OvrOverlay::get_overlay_parent()
+{
+    return overlay_parent;
+}
+
 void OvrOverlay::set_overlay_parent(OverlayParent new_parent)
 {
     overlay_parent = new_parent;
 }
 
+const Vec3 &OvrOverlay::get_overlay_position()
+{
+    return position;
+}
+
 void OvrOverlay::set_overlay_position(const Vec3 &new_pos)
 {
     position = new_pos;
+}
+
+const Vec3 &OvrOverlay::get_overlay_rotation()
+{
+    return rotation;
 }
 
 void OvrOverlay::set_overlay_rotation(const Vec3 &new_rot)

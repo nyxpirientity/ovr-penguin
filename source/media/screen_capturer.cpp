@@ -134,7 +134,6 @@ void ScreenCaptureStream::on_screencast_session_created(GObject *source_object, 
 
     if (error)
     {
-        // TODO: Probably a better way to handle this?
         logger.log_error("ScreenCaptureStream", format_gerror_string("Screencast XdpSession creation failed :c", *error), true);
         on_screencast_started.broadcast({format_gerror_string("Screencast XdpSession creation failed :c", *error), -1});
         return;

@@ -28,6 +28,12 @@ public:
 
     void refresh_aliases();
 
+    std::string serialize_state_to_exec();
+
+    void destroy_overlay(usize overlay_index);
+    
+    void reset_state();
+
 private:
     void init_next_overlay_capture();
 

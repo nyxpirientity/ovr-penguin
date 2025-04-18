@@ -6,6 +6,7 @@
 #include "graphics/gl_context.hpp"
 #include "media/screen_capturer.hpp"
 #include "system/filesystem.hpp"
+#include <openvr.h>
 
 #include <filesystem>
 #include <fstream>
@@ -152,6 +153,26 @@ void OvrPenguin::execute_command(const std::string& input)
             return;
         }
 
+        for (WeakPtr<OvrWindowOverlay> overlay : overlays)
+        {
+            if (overlay->get_overlay_name() == name)
+            {
+                logger.log("OvrPenguin", "overlay names must be unique...", true);
+                return;
+            }
+        }
+
+        const usize max_overlay_name_length = (std::min(vr::k_unVROverlayMaxNameLength, vr::k_unVROverlayMaxKeyLength) - 1);
+
+        for (WeakPtr<OvrWindowOverlay> overlay : overlays)
+        {
+            if (overlay->get_overlay_name().size() > max_overlay_name_length)
+            {
+                logger.log("OvrPenguin", "overlay names cannot be more than " + std::to_string(max_overlay_name_length) + " c chars... (openvr limitation, okay?)", true);
+                return;
+            }
+        }
+
         WeakPtr<OvrWindowOverlay> new_overlay = adopt(Node::construct<OvrWindowOverlay>(gl_context, screen_capturer));
         overlays.push_back(new_overlay);
         new_overlay->set_overlay_name(name);
@@ -197,8 +218,7 @@ void OvrPenguin::execute_command(const std::string& input)
             return;
         }
 
-        overlays[overlay_index]->queue_destroy();
-        overlays.erase(overlays.begin() + overlay_index);
+        destroy_overlay(overlay_index);
         logger.log("OvrPenguin", "destroyed overlay of name '" + name + "'!", true);
     }
     else if (command.get_parameter(0) == "init-window-overlay-capture")
@@ -467,9 +487,78 @@ void OvrPenguin::execute_command(const std::string& input)
 
         file_stream.close();
     }
+    else if (command.get_parameter(0) == "save-exec")
+    {
+        command.set_options({"--file", "--overwrite", "--dupe"});
+
+        std::filesystem::path file = command.get_option_parameter("--file", 0);
+
+        if (file.empty())
+        {
+            logger.log("OvrPenguin", "save-exec requires --file option to specify what file to save to", true);
+            return;
+        }
+
+        if (not file.is_absolute())
+        {
+            file = get_executables_dir() / file;
+        }
+
+        const bool overwrite = command.has_parameter("--overwrite");
+        const bool dupe = command.has_parameter("--dupe");
+        const bool exists = std::filesystem::exists(file);
+
+        if (exists and not overwrite and not dupe)
+        {
+            logger.log("OvrPenguin", "by default, save-exec will not overwrite files. to change this, add --overwrite option to the command. alternatively, use --dupe to copy old file data to a new file before saving", true);
+            return;
+        }
+
+        if (exists and not std::filesystem::is_regular_file(file))
+        {
+            logger.log("OvrPenguin", "file seems to exist, but is not a regular file (might be a directory, or symlink, etc?), not saving", true);
+            return;
+        }
+
+        if (dupe and exists)
+        {
+            bool safe_path = false;
+            usize path_num = 0;
+            std::filesystem::path new_path = file;
+            
+            while (not safe_path)
+            {
+                new_path.replace_filename(file.filename().string() + "_copy-" + std::to_string(path_num));
+                safe_path = not std::filesystem::exists(new_path);
+                path_num += 1;
+            }
+
+            logger.log("OvrPenguin", "copying " + file.string() + " to " + new_path.string(), true);
+
+            std::filesystem::copy_file(file, new_path);
+        }
+
+        std::ofstream output_stream{ file };
+
+        if (not output_stream.is_open())
+        {
+            logger.log_error("OvrPenguin", "couldn't open stream? :c", true);
+            return;
+        }
+
+        std::string serialized_state = serialize_state_to_exec();
+        output_stream.write(serialized_state.c_str(), serialized_state.size());
+        logger.log("OvrPenguin", "saved to " + file.string(), true);
+    }
     else if (command.get_parameter(0).find_first_of("//") == 0)
     {
         logger.log("OvrPenguin", "ignoring comment command: '" + command.get_raw_command() + "'", false);
+    }
+    else if (command.get_parameter(0) == "reset")
+    {
+        logger.log("OvrPenguin", "resetting state!", true);
+        reset_state();
+        logger.log("OvrPenguin", "finished resetting state!", true);
     }
     else
     {
@@ -619,6 +708,76 @@ void OvrPenguin::refresh_aliases()
         }
 
         file_input_stream.close();
+    }
+}
+
+std::string OvrPenguin::serialize_state_to_exec()
+{
+    std::string output = "ovr-penguin-executable!~\novr-init\n";
+
+    for (WeakPtr<OvrWindowOverlay> overlay : overlays)
+    {
+        std::string type_string;
+        const std::string& overlay_name = overlay->get_overlay_name();
+        const Vec3& ol_pos = overlay->get_overlay_position();
+        const Vec3& ol_rot = overlay->get_overlay_rotation();
+        f64 ol_curve = overlay->get_curve();
+        f64 ol_size = overlay->get_size();
+        std::string parent_string;
+
+        switch (overlay->get_overlay_type())
+        {
+        case OvrOverlay::Type::dashboard:
+            type_string = "dashboard";
+            break;
+        case OvrOverlay::Type::world:
+            type_string = "world";
+            break;
+        case OvrOverlay::Type::null:
+            continue;
+        }
+
+        switch (overlay->get_overlay_parent())
+        {
+            case OverlayParent::HeadMountedDisplay:
+                parent_string = "hmd";
+                break;
+            case OverlayParent::LeftMotionController:
+                parent_string = "left-hand";
+                break;
+            case OverlayParent::RightMotionController:
+                parent_string = "right-hand";
+                break;
+            case OverlayParent::PlaySpace:
+                parent_string = "origin";
+                break;
+        }
+
+        output.append(
+            "new-window-overlay --name \"" + overlay_name + "\" --type " + type_string + "\n"
+            "set-window-overlay-properties --name \"" + overlay_name + "\" "
+                "--position " + std::to_string(ol_pos.x) + " " + std::to_string(ol_pos.y) + " " + std::to_string(ol_pos.z) + " "
+                "--rotation " + std::to_string(ol_rot.x) + " " + std::to_string(ol_rot.y) + " " + std::to_string(ol_rot.z) + " "
+                "--curve " + std::to_string(ol_curve) + " "
+                "--size " + std::to_string(ol_size) + " "
+                "--parent " + parent_string + "\n"
+        );
+    }
+
+    return output;
+}
+
+void OvrPenguin::destroy_overlay(usize overlay_index)
+{
+    overlays[overlay_index]->queue_destroy();
+    overlays.erase(overlays.begin() + overlay_index);
+}
+
+void OvrPenguin::reset_state()
+{
+    while (overlays.size() > 0)
+    {
+        destroy_overlay(overlays.size() - 1);
     }
 }
 

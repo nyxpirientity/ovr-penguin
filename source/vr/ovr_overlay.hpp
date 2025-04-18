@@ -41,11 +41,20 @@ public:
     [[nodiscard]] const std::string& get_overlay_name() const { return overlay_name; }
     [[nodiscard]] bool set_overlay_name(const std::string& in_name); 
 
+
+    OverlayParent get_overlay_parent();
     void set_overlay_parent(OverlayParent new_parent);
+
+    const Vec3& get_overlay_position();
     void set_overlay_position(const Vec3& new_pos);
+
+    const Vec3& get_overlay_rotation();
     void set_overlay_rotation(const Vec3& new_rot);
 
+    f64 get_size();
     void set_size(f64 new_size);
+
+    f64 get_curve();
     void set_curve(f64 new_curve);
 
     void refresh_overlay_properties();
