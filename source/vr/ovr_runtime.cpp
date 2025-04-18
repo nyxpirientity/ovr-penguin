@@ -37,6 +37,11 @@ void OvrRuntime::on_tick(real delta_seconds)
 {
     Super::on_tick(delta_seconds);
 
+    if (!is_running())
+    {
+        return;
+    }
+    
     ovr_data->tracked_devices.clear();
     ovr_data->tracked_devices.reserve(vr::k_unMaxTrackedDeviceCount);
     vr::VRSystem()->GetDeviceToAbsoluteTrackingPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, 0.0, &(ovr_data->raw_tracked_device_poses[0]), ovr_data->raw_tracked_device_poses.size());
@@ -62,7 +67,6 @@ void OvrRuntime::on_tick(real delta_seconds)
 
         ovr_data->tracked_devices.push_back(device);
     }
-    
 }
 
 void OvrRuntime::on_stop()

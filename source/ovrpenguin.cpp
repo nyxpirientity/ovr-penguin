@@ -5,12 +5,20 @@
 #include "vr/ovr_window_overlay.hpp"
 #include "graphics/gl_context.hpp"
 #include "media/screen_capturer.hpp"
+#include "system/filesystem.hpp"
 
 #include <filesystem>
 #include <fstream>
 
 namespace nyxpiri::ovrpenguin
 {
+std::filesystem::path get_aliases_dir()
+{
+    std::filesystem::path path = filesystem::get_save_dir().value() / "aliases";
+    std::filesystem::create_directories(path);
+    return path;
+}
+
 OvrPenguin::OvrPenguin()
 {
     io_handler = adopt(Node::construct<StdIoHandler>());
@@ -28,6 +36,7 @@ void OvrPenguin::on_start()
     Super::on_start();
 
     logger.terminal_output_function = [this](const std::string& string){ io_handler->async_print_string(string); };
+    refresh_aliases();
 }
 
 void OvrPenguin::on_tick(real delta_seconds)
@@ -60,6 +69,26 @@ void OvrPenguin::execute_command(const std::string& input)
         logger.log("OvrPenguin", "Blank command? Ignoring (will also flush output buffer)", true);
         return;
     }
+
+    for (usize i = 0; i < aliases.size(); i++)
+    {
+        if (aliases[i].first != command.get_parameter(0))
+        {
+            continue;
+        }
+
+        std::string new_input = aliases[i].second;
+        for (usize i = 1; i < command.parameter_count(); i++)
+        {
+            // todo: this is going to work pretty badly once quotation marks are supported...
+            new_input.push_back(' ');
+            new_input.append(command.get_parameter(i));
+        }
+        
+        command.reset(new_input); 
+        break;
+    }
+    
 
     if(command.get_parameter(0) == "stop")
     {
@@ -253,6 +282,19 @@ void OvrPenguin::execute_command(const std::string& input)
             overlay->set_curve(curve);
         }
     }
+    else if (command.get_parameter(0) == "refresh-aliases")
+    {
+        refresh_aliases();
+    }
+    else if (command.get_parameter(0) == "list-aliases")
+    {
+        logger.log("OvrPenguin", "currently loaded alias list!", true);
+        
+        for (const auto& alias : aliases)
+        {
+            logger.log("OvrPenguin", "- " + alias.first + " => " + alias.second, true);
+        }
+    }
     else if (command.get_parameter(0) == "exec")
     {
         command.set_options({"--file"});
@@ -372,6 +414,69 @@ void OvrPenguin::set_overlay_type(WeakPtr<class OvrWindowOverlay> overlay, const
     }
 
     logger.log("OvrPenguin", "set window overlay type to '" + type_str + "' for overlay '" + overlay->get_overlay_name() + "'!", true);
+}
+
+void OvrPenguin::refresh_aliases()
+{
+    std::filesystem::recursive_directory_iterator iterator{get_aliases_dir()};
+    
+    aliases.clear();
+    aliases.reserve(32);
+    logger.log("OvrPenguin", "Scanning for alias files in path '" + get_aliases_dir().string() + "'", false);
+    std::ifstream file_input_stream;
+    std::string file_input;
+    for (const std::filesystem::directory_entry& entry : iterator)
+    {
+        if (!entry.is_regular_file())
+        {
+            logger.log("OvrPenguin", "aliases directory entry '" + entry.path().string() + "' is_regular_file() returned false, ignoring...", false);
+            continue;
+        }
+
+        file_input_stream.open(entry.path());
+        std::getline(file_input_stream, file_input);
+        
+        if (file_input != "ovr-penguin-aliases!~")
+        {
+            logger.log("OvrPenguin", "aliases directory entry '" + entry.path().string() + "' ignored due to 'ovr-penguin-aliases!~' not being the first line", true);
+            continue;
+        }
+
+        while (std::getline(file_input_stream, file_input))
+        {
+            if (file_input.empty())
+            {
+                continue;
+            }
+
+            StringCommand line_command = file_input;
+            
+            if (line_command.has_parameter(0))
+            {
+                if (line_command.get_parameter(0).find_first_of("//") == 0)
+                {
+                    continue;
+                }
+            }
+
+            if (!line_command.has_parameter(1))
+            {
+                logger.log("OvrPenguin", "aliases file entry '" + file_input + "' in file '" + entry.path().string() + "' did not seem to be complete, stopping parse", true);
+                break;
+            }
+
+            std::string alias_value;
+            
+            for (usize i = 1; i < line_command.parameter_count(); i++)
+            {
+                alias_value.append(line_command.get_parameter(i));
+                alias_value.push_back(' ');
+            }
+            
+
+            aliases.push_back({line_command.copy_parameter(0), alias_value});
+        }
+    }
 }
 
 void OvrPenguin::init_next_overlay_capture()

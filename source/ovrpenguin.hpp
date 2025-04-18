@@ -26,6 +26,8 @@ public:
 
     void set_overlay_type(WeakPtr<class OvrWindowOverlay> overlay, const std::string& type_str);
 
+    void refresh_aliases();
+
 private:
     void init_next_overlay_capture();
 
@@ -38,6 +40,8 @@ private:
     DynArray<WeakPtr<class OvrWindowOverlay>> overlays;
     usize current_window_overlay_capture_init_index = -1;
     bool wait_for_input = true;
+    /* List of aliases, first pair element is the alias name (what the user types to invoke the alias), the second is the actual alias value */
+    DynArray<std::pair<std::string, std::string>> aliases;
 
     EventBinding input_event_binding;
     EventBinding init_window_overlay_capture_log_binding;

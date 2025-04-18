@@ -9,6 +9,7 @@
 #include <types/event.hpp>
 #include <pipewire/pipewire.h>
 #include <GLFW/glfw3.h>
+#include "system/filesystem.hpp"
 
 
 using namespace nyxpiri::ovrpenguin;
@@ -82,7 +83,7 @@ int main(int argc, char** argv)
     std::cout << "       | |       | |    \n";
     std::cout << "       \\ /\\/\\ /\\/\\ /    \n";
     std::cout << "        -\\__/-\\__/-     \n";
-    std::cout << "       OVR Penguin\n";
+    std::cout << "       OVR Penguin\n\n";
     
     std::cout << "Initializing GLFW...\n";
     if (glfwInit() != GLFW_TRUE)
@@ -96,14 +97,23 @@ int main(int argc, char** argv)
     pw_init(&argc, &argv);
     std::cout << "Pipewire initialized with version '" << pw_get_library_version() << "'!\n\n";
     
+    std::optional<std::filesystem::path> save_dir = filesystem::get_save_dir();
+    
+    if (!save_dir)
+    {
+        std::cout << "???? getting save directory failed?? exiting... :c (tries to go for '${HOME}/.config/ovrpenguin', creating directories along the way)\n"; 
+        return 0;
+    }
+
+    std::cout << "Using save directory " << save_dir.value() << "\n\n"; 
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     std::cout << "Welcome to OVR Penguin, a CLI utility for reducing the shortcomings of SteamVR on Linux Wayland systems!\n"
                  "Input 'help' for guidance on how to use OVR Penguin.\n"
-                 "OVR Penguin uses profiles, which are to save and load setups/states. By default, you are loaded into an empty profile.\n"
-                 "Due to SteamVR printing to standard out automatically, OVRPenguin will not initialize/connect to OpenVR until you enter the command 'ovr-init'.\n";
+                 "OVRPenguin will not initialize/connect to OpenVR until you enter the command 'ovr-init'.\n\n";
     
     RootNode* root_node = new RootNode();
     root_node->adopt(Node::construct<OvrPenguin>());

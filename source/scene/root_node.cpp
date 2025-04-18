@@ -1,7 +1,8 @@
 #include "root_node.hpp"
 #include <thread>
 
-namespace nyxpiri::ovrpenguin {
+namespace nyxpiri::ovrpenguin
+{
 
 RootNode::RootNode() {}
 
@@ -17,8 +18,19 @@ void RootNode::on_start()
         previous_tick_time_point = std::chrono::steady_clock::now();
 
         tick(delta_seconds);
-        std::this_thread::sleep_for(std::chrono::milliseconds(4) - (std::chrono::steady_clock::now() - previous_tick_time_point));
+        std::this_thread::sleep_for(min_delta_microseconds - (std::chrono::steady_clock::now() - previous_tick_time_point));
     }
+}
+
+void RootNode::set_max_fps(usize max_fps)
+{
+    if (max_fps <= 0)
+    {
+        min_delta_microseconds = std::chrono::microseconds{0};
+        return;
+    }
+
+    min_delta_microseconds = std::chrono::microseconds{(1 / max_fps) * 1'000'000};
 }
 
 } // namespace nyxpiri::ovrpenguin
