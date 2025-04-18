@@ -19,6 +19,13 @@ std::filesystem::path get_aliases_dir()
     return path;
 }
 
+std::filesystem::path get_executables_dir()
+{
+    std::filesystem::path path = filesystem::get_save_dir().value() / "executables";
+    std::filesystem::create_directories(path);
+    return path;
+}
+
 OvrPenguin::OvrPenguin()
 {
     io_handler = adopt(Node::construct<StdIoHandler>());
@@ -345,6 +352,12 @@ void OvrPenguin::execute_command(const std::string& input)
 
         std::ofstream output_stream{file_path, std::ios_base::app};
 
+        if (not output_stream.is_open())
+        {
+            logger.log_error("OvrPenguin", "Couldn't open stream? :c", true);
+            return;
+        }
+
         output_stream.write("ovr-penguin-aliases!~\n", 22);
         std::string alias_string = ("\"" + name + "\" \"" + value + "\"");
         output_stream.write(alias_string.c_str(), alias_string.size());
@@ -355,15 +368,19 @@ void OvrPenguin::execute_command(const std::string& input)
     {
         command.set_options({"--file"});
 
-        std::string file = command.get_option_parameter_copy("--file", 0);
+        std::filesystem::path file_path(command.get_option_parameter_copy("--file", 0));
 
-        if (file.empty())
+        if (file_path.empty())
         {
             logger.log("OvrPenguin", "exec requires --file parameter to denote the file to execute.", true);
             return;
         }
-        std::filesystem::path file_path(file);
-        file_path = std::filesystem::absolute(file_path);
+
+        if (not file_path.is_absolute())
+        {
+            file_path = get_executables_dir() / file_path;
+        }
+        
         std::ifstream file_stream(file_path);
         
         if (!std::filesystem::exists(file_path))
@@ -384,7 +401,7 @@ void OvrPenguin::execute_command(const std::string& input)
         
         if (line != "ovr-penguin-executable!~")
         {
-            logger.log("OvrPenguin", "file '" + file + "' is not a valid ovr-penguin executable file... (first line must be 'ovr-penguin-executable!~')", true);
+            logger.log("OvrPenguin", "file '" + file_path.string() + "' is not a valid ovr-penguin executable file... (first line must be 'ovr-penguin-executable!~')", true);
             return;
         }
 
@@ -490,6 +507,13 @@ void OvrPenguin::refresh_aliases()
         }
 
         file_input_stream.open(entry.path());
+
+        if (not file_input_stream.is_open())
+        {
+            logger.log_error("OvrPenguin", "Couldn't open stream when refreshing aliases for file " + entry.path().string() + "? :c", true);
+            continue;
+        }
+
         std::getline(file_input_stream, file_input);
         
         if (file_input != "ovr-penguin-aliases!~")

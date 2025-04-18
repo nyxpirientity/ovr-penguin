@@ -1,41 +1,26 @@
 #ifndef MAT4X4_HPP
 #define MAT4X4_HPP
 
-#include "types/nyxarrays.hpp"
 #include "math/num_types.hpp"
+#include "glm/mat4x4.hpp"
 
 namespace nyxpiri::ovrpenguin
 {
-struct Mat4x4
+struct Mat4x4 : public glm::mat<4, 4, real, glm::defaultp>
 {
+private:
+    using Super = glm::mat<4, 4, real, glm::defaultp>;
+public:
     Mat4x4()
-    {
-        for (usize i = 0; i < 4; i++)
-        {
-            for (usize j = 0; j < 4; j++)
-            {
-                data[i][j] = 0.0;
-            }
-        }
-    }
+    : Super(
+        {0.0, 0.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0, 0.0}
+    ) {}
 
-    Mat4x4(real a, real b, real c, real d,
-           real e, real f, real g, real h,
-           real i, real j, real k, real l,
-           real m, real n, real o, real p)
-    {
-        data[0] = {a, b, c, d};
-        data[1] = {e, f, g, h};
-        data[2] = {i, j, k, l};
-        data[3] = {m, n, o, p};
-    }
-
-    Array<Array<real, 4>, 4> data;
-
-    Array<real, 4>& operator[](usize i)
-    {
-        return data[i];
-    }
+    Mat4x4(col_type a, col_type b, col_type c, col_type d)
+    : Super(a, b, c ,d) {}
 };
 } // namespace nyxpiri::ovrpenguin
 #endif // MAT4X4_HPP

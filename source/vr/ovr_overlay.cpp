@@ -51,6 +51,7 @@ void OvrOverlay::on_tick(real delta_seconds)
     //Color default_texture_data[4] = {{(u8)164, (u8)64, (u8)255, (u8)255}, {(u8)164, (u8)64, (u8)255, (u8)128}, {(u8)164, (u8)64, (u8)255, (u8)64}, {(u8)164, (u8)64, (u8)255, (u8)32}};
 
     //set_texture_data(&default_texture_data[0], 2, 2);
+    //vr::VROverlay()->SetOverlayTransformTrackedDeviceRelative(handle, ???, )
 }
 
 OvrOverlay::Type OvrOverlay::get_overlay_type() const

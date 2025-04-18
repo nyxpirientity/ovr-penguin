@@ -1,8 +1,9 @@
 #ifndef OVR_OVERLAY_HPP
 #define OVR_OVERLAY_HPP
 
-#include "scene/node3d.hpp"
+#include "scene/node.hpp"
 #include "types/color.hpp"
+#include "math/vec3.hpp"
 
 #include <string>
 
@@ -13,9 +14,9 @@ namespace vr
 namespace nyxpiri::ovrpenguin
 {
 
-class OvrOverlay : public Node3d
+class OvrOverlay : public Node
 {
-    using Super = Node3d;
+    using Super = Node;
 public:
     OvrOverlay(WeakPtr<class GlContext> in_gl_context);
     ~OvrOverlay();
@@ -55,6 +56,9 @@ private:
     u32 gl_texture_id = 0;
     vr::Texture_t* vr_texture = nullptr;
     std::string overlay_name = "ovr-penguin-overlay!";
+    
+    Vec3 position;
+    Vec3 rotation;
 
     f64 size = 1.0;
     f64 curve = 0.0;
