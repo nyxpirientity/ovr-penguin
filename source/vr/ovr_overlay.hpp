@@ -66,7 +66,7 @@ private:
     u32 gl_texture_id = 0;
     vr::Texture_t* vr_texture = nullptr;
     std::string overlay_name = "ovr-penguin-overlay!";
-    OverlayParent parent = OverlayParent::PlaySpace;
+    OverlayParent overlay_parent = OverlayParent::PlaySpace;
 
     Vec3 position;
     Vec3 rotation;

@@ -53,45 +53,49 @@ void OvrOverlay::on_tick(real delta_seconds)
 
     vr::TrackedDeviceIndex_t device_index = -1;
     vr::HmdMatrix34_t ovr_transform;
-    Mat4x4 transform;
-    Quat quaternion;
-    transform = glm::translate(transform, position);
+    Mat4x4 transform{1.0};
+    Quat quaternion{Vec3{glm::radians(rotation.x), glm::radians(rotation.y), glm::radians(rotation.z)}};
     transform = glm::rotate(transform, glm::angle(quaternion), glm::axis(quaternion));
+    transform = glm::translate(transform, position);
 
     ovr_transform.m[0][0] = transform[0][0];
-    ovr_transform.m[1][0] = transform[1][0];
-    ovr_transform.m[2][0] = transform[2][0];
-    
     ovr_transform.m[0][1] = transform[0][1];
-    ovr_transform.m[1][1] = transform[1][1];
-    ovr_transform.m[2][1] = transform[2][1];
-
     ovr_transform.m[0][2] = transform[0][2];
+    
+    ovr_transform.m[1][0] = transform[1][0];
+    ovr_transform.m[1][1] = transform[1][1];
     ovr_transform.m[1][2] = transform[1][2];
+
+    ovr_transform.m[2][0] = transform[2][0];
+    ovr_transform.m[2][1] = transform[2][1];
     ovr_transform.m[2][2] = transform[2][2];
 
-    ovr_transform.m[0][3] = transform[0][3];
-    ovr_transform.m[1][3] = transform[1][3];
-    ovr_transform.m[2][3] = transform[2][3];
+    ovr_transform.m[0][3] = transform[3][0];
+    ovr_transform.m[1][3] = transform[3][1];
+    ovr_transform.m[2][3] = transform[3][2];
 
-    switch (parent)
+    switch (overlay_parent)
     {
     case OverlayParent::HeadMountedDisplay:
         device_index = vr::k_unTrackedDeviceIndex_Hmd;
-        [[fallthrough]];
+        break;
     
     case OverlayParent::LeftMotionController:
         device_index = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
-        [[fallthrough]];
+        break;
     
     case OverlayParent::RightMotionController:
         device_index = vr::VRSystem()->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
-        vr::VROverlay()->SetOverlayTransformTrackedDeviceRelative(handle, device_index, &ovr_transform);
         break;
     
     case OverlayParent::PlaySpace:
         vr::VROverlay()->SetOverlayTransformAbsolute(handle, vr::ETrackingUniverseOrigin::TrackingUniverseStanding, &ovr_transform);
         break;
+    }
+    
+    if (overlay_parent != OverlayParent::PlaySpace)
+    {
+        vr::VROverlay()->SetOverlayTransformTrackedDeviceRelative(handle, device_index, &ovr_transform);
     }
 }
 
@@ -137,6 +141,7 @@ bool OvrOverlay::set_overlay_type(Type new_type)
         
     case Type::world:
         creation_error = vr::VROverlay()->CreateOverlay(overlay_name.c_str(), overlay_name.c_str(), &handle);
+        vr::VROverlay()->ShowOverlay(handle);
         break;
     }
 
@@ -237,7 +242,7 @@ bool OvrOverlay::set_overlay_name(const std::string &in_name)
 
 void OvrOverlay::set_overlay_parent(OverlayParent new_parent)
 {
-    parent = new_parent;
+    overlay_parent = new_parent;
 }
 
 void OvrOverlay::set_overlay_position(const Vec3 &new_pos)

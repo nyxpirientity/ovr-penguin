@@ -2,7 +2,7 @@
 #define MAT4X4_HPP
 
 #include "math/num_types.hpp"
-#include "glm/mat4x4.hpp"
+#include <glm/mat4x4.hpp>
 
 namespace nyxpiri::ovrpenguin
 {
@@ -21,6 +21,9 @@ public:
 
     Mat4x4(col_type a, col_type b, col_type c, col_type d)
     : Super(a, b, c ,d) {}
+
+    Mat4x4(real scalar)
+    : Super(scalar) {}
 
     Mat4x4& operator=(const glm::mat<4, 4, real, glm::defaultp>& other)
     {
