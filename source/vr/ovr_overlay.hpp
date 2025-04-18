@@ -10,6 +10,7 @@
 namespace vr
 {
     class Texture_t;
+    class VRTextureBounds_t;
 }
 namespace nyxpiri::ovrpenguin
 {
@@ -65,6 +66,7 @@ private:
     WeakPtr<class GlContext> gl_context = nullptr;
     u32 gl_texture_id = 0;
     vr::Texture_t* vr_texture = nullptr;
+    vr::VRTextureBounds_t* vr_bounds = nullptr;
     std::string overlay_name = "ovr-penguin-overlay!";
     OverlayParent overlay_parent = OverlayParent::PlaySpace;
 

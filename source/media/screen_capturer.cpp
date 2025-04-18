@@ -111,9 +111,10 @@ ScreenCaptureStream::ScreenCaptureStream(WeakPtr<ScreenCapturer> in_capturer, Lo
 
 ScreenCaptureStream::~ScreenCaptureStream()
 {
+    logger.log("ScreenCaptureStream", "...closing XdpSession, pw_stream and pw_core!", false);
+    xdp_session_close(session.get());
     pw_stream_disconnect(m_pw_stream);
-    logger.log("ScreenCaptureStream", "...Closing XdpSession!", false);
-    xdp_session_close(session);
+    pw_core_disconnect(m_pw_core);
 }
 
 void ScreenCaptureStream::debug_log_info()
@@ -122,14 +123,14 @@ void ScreenCaptureStream::debug_log_info()
     
     if (session)
     {
-        logger.log("ScreenCaptureStream", "XdpSession state is " + std::to_string(xdp_session_get_session_state(session)), true);
+        logger.log("ScreenCaptureStream", "XdpSession state is " + std::to_string(xdp_session_get_session_state(session.get())), true);
     }
 }
 
 void ScreenCaptureStream::on_screencast_session_created(GObject *source_object, GAsyncResult *res)
 {
     GLibErrorPtr error;
-    GLibAutoPtr<XdpSession> session = xdp_portal_create_screencast_session_finish(XDP_PORTAL(source_object), res, error.pass());
+    session = xdp_portal_create_screencast_session_finish(XDP_PORTAL(source_object), res, error.pass());
 
     if (error)
     {
@@ -139,7 +140,7 @@ void ScreenCaptureStream::on_screencast_session_created(GObject *source_object, 
         return;
     }
 
-    logger.log("ScreenCaptureStream", "Starting XdpSession!", false);
+    logger.log("ScreenCaptureStream", "starting XdpSession!", false);
 
     xdp_session_start(session.get(), NULL, NULL, static_on_screencast_session_start, this);
 }
@@ -147,8 +148,7 @@ void ScreenCaptureStream::on_screencast_session_created(GObject *source_object, 
 void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GAsyncResult *res)
 {
     GLibErrorPtr error;
-    session = XDP_SESSION(source_object);
-    xdp_session_start_finish(session, res, error.pass());
+    xdp_session_start_finish(session.get(), res, error.pass());
 
     if (error)
     {
@@ -157,7 +157,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
         return;
     }
 
-    XdpSessionType session_type = XdpSessionType(xdp_session_get_session_type(session));
+    XdpSessionType session_type = XdpSessionType(xdp_session_get_session_type(session.get()));
 
     if (session_type != XDP_SESSION_SCREENCAST)
     {
@@ -168,19 +168,19 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
 
     logger.log("ScreenCaptureStream", "XdpSession started!", false);
     
-    XdpSessionState session_state = xdp_session_get_session_state(session);
+    XdpSessionState session_state = xdp_session_get_session_state(session.get());
     if (session_state == XdpSessionState::XDP_SESSION_ACTIVE)
     {
-        logger.log("ScreenCaptureStream", "Current status is active!", false);
+        logger.log("ScreenCaptureStream", "Current XdpSession status is active!", false);
     }
     else
     {
-        logger.log_error("ScreenCaptureStream", "Current status isn't active... :c", true);
-        on_screencast_started.broadcast({format_gerror_string("Current status isn't active... :c", *error), -1});
+        logger.log_error("ScreenCaptureStream", "Current XdpSession status isn't active... :c", true);
+        on_screencast_started.broadcast({format_gerror_string("Current XdpSession status isn't active... :c", *error), -1});
         return;
     }
 
-    GVariant* xdp_session_streams = xdp_session_get_streams(session);
+    GVariant* xdp_session_streams = xdp_session_get_streams(session.get());
     
     if (g_variant_n_children(xdp_session_streams) <= 0)
     {
@@ -206,7 +206,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
         PW_KEY_MEDIA_ROLE, "Screen",
         NULL);
     
-    m_pw_core = pw_context_connect_fd(capturer->get_pw_context(), xdp_session_open_pipewire_remote(session), nullptr, 0); 
+    m_pw_core = pw_context_connect_fd(capturer->get_pw_context(), xdp_session_open_pipewire_remote(session.get()), nullptr, 0); 
 
     spa_zero(m_spa_video_info);
 

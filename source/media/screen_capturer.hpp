@@ -54,7 +54,7 @@ private:
     spa_hook m_pw_stream_events_listener;
     spa_video_info m_spa_video_info;
     class Logger& logger;
-    XdpSession* session = nullptr;
+    GLibAutoPtr<XdpSession> session = nullptr;
     DynArray<Color> screen_buffer;
 };
 

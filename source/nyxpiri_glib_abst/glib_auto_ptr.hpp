@@ -8,7 +8,15 @@ namespace nyxpiri::ovrpenguin
 template <typename T>
 class GLibAutoPtr {
 public:
-    GLibAutoPtr(T* in_ptr = nullptr) : ptr(in_ptr) {}
+    GLibAutoPtr(T* in_ptr) : ptr(in_ptr)
+    {
+        if (!ptr)
+        {
+            return;
+        }
+
+        g_object_ref(ptr);
+    }
 
     ~GLibAutoPtr()
     {

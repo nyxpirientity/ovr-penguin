@@ -14,11 +14,17 @@ OvrOverlay::OvrOverlay(WeakPtr<GlContext> in_gl_context)
 {
     gl_context = in_gl_context;
     vr_texture = new vr::Texture_t; 
+    vr_bounds = new vr::VRTextureBounds_t;
+    vr_bounds->uMin = 0.0;
+    vr_bounds->uMax = 1.0;
+    vr_bounds->vMin = 1.0;
+    vr_bounds->vMax = 0.0;
 }
 
 OvrOverlay::~OvrOverlay()
 {
     delete vr_texture;
+    delete vr_bounds;
 }
 
 void OvrOverlay::on_start()
@@ -160,20 +166,6 @@ void OvrOverlay::set_texture_data(DynArray<Color>&& data, usize width, usize hei
 {
     texture_data = std::move(data);
     data.clear();
-    data.reserve(data.size());
-
-    for (usize i = 0; i < height / 2; i++)
-    {
-        for (usize j = 0; j < width; j++)
-        {
-            usize top_index = i * width + j;
-            usize bottom_index = (height - i - 1) * width + j;
-
-            Color temp = texture_data[top_index];
-            texture_data[top_index] = texture_data[bottom_index];
-            texture_data[bottom_index] = temp;
-        }
-    }
     
     gl_context->bind();
 
@@ -199,6 +191,7 @@ void OvrOverlay::set_texture_data(DynArray<Color>&& data, usize width, usize hei
     }
 
     vr::VROverlayError texture_error = vr::VROverlay()->SetOverlayTexture(handle, vr_texture);
+    vr::VROverlayError bounds_error = vr::VROverlay()->SetOverlayTextureBounds(handle, vr_bounds);
 
     gl_context->unbind();
 }
