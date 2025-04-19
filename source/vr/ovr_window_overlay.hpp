@@ -13,7 +13,6 @@ namespace vr
 }
 namespace nyxpiri::ovrpenguin
 {
-
 class OvrWindowOverlay : public OvrOverlay
 {
     using Super = OvrOverlay;
@@ -32,6 +31,12 @@ protected:
     virtual void on_stop() override;
     
 private:
+    struct ColorKey
+    {
+        Color color;
+        f64 min_dist = 0.01;
+        f64 max_dist = 0.02;
+    };
 
 private:
     WeakPtr<class ScreenCapturer> screen_capturer = nullptr;
@@ -40,6 +45,7 @@ private:
     EventBinding screen_capture_data_received_binding;
     EventBinding screen_capture_session_started_binding;
 
+    DynArray<ColorKey> color_keys;
 };
 
 } // namespace nyxpiri::ovrpenguin

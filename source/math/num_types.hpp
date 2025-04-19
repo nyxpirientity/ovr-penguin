@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+namespace nyxpiri::ovrpenguin
+{
 using f32 = float;
 using f64 = double;
 using real = f64;
@@ -23,4 +25,13 @@ using i64 = std::int64_t;
 
 using usize = std::size_t;
 
+namespace math
+{
+template<typename T>
+T normalize_to_range(T a, T minimum, T maximum)
+{
+    return (maximum == minimum) ? (1.0) : ((a - minimum) / maximum - minimum);
+}
+}
+}
 #endif // NUM_TYPES_HPP
