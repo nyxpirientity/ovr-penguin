@@ -59,6 +59,10 @@ public:
 
     void refresh_overlay_properties();
 
+    void user_hide_overlay();
+    void user_show_overlay();
+    bool is_hid_by_user();
+
 protected:
     virtual void on_start() override;
     virtual void on_tick(real delta_seconds) override;
@@ -78,6 +82,7 @@ private:
     vr::VRTextureBounds_t* vr_bounds = nullptr;
     std::string overlay_name = "ovr-penguin-overlay!";
     OverlayParent overlay_parent = OverlayParent::PlaySpace;
+    bool hid_by_user = false;
 
     Vec3 position;
     Vec3 rotation;

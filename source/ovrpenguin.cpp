@@ -288,7 +288,7 @@ void OvrPenguin::execute_command(const std::string& input)
     }
     else if (command.get_parameter(0) == "set-window-overlay-properties")
     {
-        command.set_options({"--name", "--size", "--curve", "--parent", "--position", "--rotation"});
+        command.set_options({"--name", "--size", "--curve", "--parent", "--position", "--rotation", "--hidden"});
 
         std::string name = command.get_option_parameter_copy("--name", 0);
 
@@ -368,6 +368,24 @@ void OvrPenguin::execute_command(const std::string& input)
             f64 z = std::stod(rotz_str);
 
             overlay->set_overlay_rotation({x, y, z});
+        }
+
+        std::string hidden_str = command.get_option_parameter_copy("--hidden", 0);
+        
+        if (!hidden_str.empty())
+        {
+            if (hidden_str == "true")
+            {
+                overlay->user_hide_overlay();
+            }
+            else if (hidden_str == "false")
+            {
+                overlay->user_show_overlay();
+            }
+            else
+            {
+                logger.log("OvrPenguin", "set-window-overlay-properties --hidden expects 'true' or 'false' value", true);
+            }
         }
     }
     else if (command.get_parameter(0) == "refresh-aliases")
@@ -724,6 +742,7 @@ std::string OvrPenguin::serialize_state_to_exec()
         f64 ol_curve = overlay->get_curve();
         f64 ol_size = overlay->get_size();
         std::string parent_string;
+        std::string ol_hidden_str;
 
         switch (overlay->get_overlay_type())
         {
@@ -753,6 +772,15 @@ std::string OvrPenguin::serialize_state_to_exec()
                 break;
         }
 
+        if (overlay->is_hid_by_user())
+        {
+            ol_hidden_str = "true";
+        }
+        else
+        {
+            ol_hidden_str = "false";
+        }
+
         output.append(
             "new-window-overlay --name \"" + overlay_name + "\" --type " + type_string + "\n"
             "set-window-overlay-properties --name \"" + overlay_name + "\" "
@@ -760,6 +788,7 @@ std::string OvrPenguin::serialize_state_to_exec()
                 "--rotation " + std::to_string(ol_rot.x) + " " + std::to_string(ol_rot.y) + " " + std::to_string(ol_rot.z) + " "
                 "--curve " + std::to_string(ol_curve) + " "
                 "--size " + std::to_string(ol_size) + " "
+                "--hidden " + ol_hidden_str + " "
                 "--parent " + parent_string + "\n"
         );
     }

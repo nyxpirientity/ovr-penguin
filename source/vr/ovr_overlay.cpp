@@ -224,6 +224,33 @@ void OvrOverlay::refresh_overlay_properties()
     vr::VROverlay()->SetOverlayCurvature(handle, curve);
 }
 
+void OvrOverlay::user_hide_overlay()
+{
+    if (is_null())
+    {
+        return;
+    }
+
+    hid_by_user = true;
+    vr::VROverlay()->HideOverlay(handle);
+}
+
+void OvrOverlay::user_show_overlay()
+{
+    if (is_null())
+    {
+        return;
+    }
+
+    hid_by_user = false;
+    vr::VROverlay()->ShowOverlay(handle);
+}
+
+bool OvrOverlay::is_hid_by_user()
+{
+    return hid_by_user;
+}
+
 bool OvrOverlay::set_overlay_name(const std::string &in_name)
 {
     overlay_name = in_name;
