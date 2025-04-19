@@ -37,6 +37,9 @@ public:
 private:
     void init_next_overlay_capture();
 
+    void run_if_cmd_option_vec3(const class StringCommand& command, const std::string& option, usize from_index, std::function<void(struct Vec3 val)> function);
+    void run_if_cmd_option_real(const class StringCommand& command, const std::string& option, usize from_index, std::function<void(real val)> function);
+
 private:
     Logger logger;
     WeakPtr<class StdIoHandler> io_handler = nullptr;

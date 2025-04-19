@@ -57,6 +57,9 @@ public:
     f64 get_curve();
     void set_curve(f64 new_curve);
 
+    real get_alpha();
+    void set_alpha(real new_alpha);
+
     void refresh_overlay_properties();
 
     void user_hide_overlay();
@@ -89,6 +92,7 @@ private:
 
     f64 size = 1.0;
     f64 curve = 0.0;
+    real alpha = 1.0;
 };
 
 } // namespace nyxpiri::ovrpenguin

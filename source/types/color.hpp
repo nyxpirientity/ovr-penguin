@@ -21,6 +21,11 @@ public:
     {
     }
 
+    Color(f64 in_r, f64 in_g, f64 in_b, f64 in_a)
+    : r(in_r * 255), g(in_g * 255), b(in_b * 255), a(in_a * 255)
+    {
+    }
+
 union
 {
     u8 rgba[4];

@@ -5,10 +5,11 @@
 
 namespace nyxpiri::ovrpenguin
 {
-struct Vec3 : public glm::vec<3, real, glm::defaultp>
+using GlmVec3 = glm::vec<3, real, glm::defaultp>;
+struct Vec3 : public GlmVec3
 {
 private:
-    using Super = glm::vec<3, real, glm::defaultp>;
+    using Super = GlmVec3;
 public:
     Vec3() : Super(0.0, 0.0, 0.0) {}
     Vec3(real scalar) : Super(scalar) {}

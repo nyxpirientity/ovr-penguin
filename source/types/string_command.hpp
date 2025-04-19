@@ -119,7 +119,6 @@ public:
 
         return -1;
     }
-
         
     bool has_parameter(const std::string& parameter) const
     {
@@ -163,12 +162,12 @@ public:
         }
     }
 
-    const std::vector<std::string_view>& get_option_parameters(usize index)
+    const std::vector<std::string_view>& get_option_parameters(usize index) const
     {
         return option_parameters[index];
     }
 
-    usize get_option_parameters_index(const std::string& option)
+    usize get_option_parameters_index(const std::string& option) const
     {
         for (usize i = 0; i < options.size(); i++)
         {
@@ -181,7 +180,7 @@ public:
         return -1;
     }
 
-    const std::vector<std::string_view>* get_option_parameters(const std::string& option)
+    const std::vector<std::string_view>* get_option_parameters(const std::string& option) const
     {
         usize index = get_option_parameters_index(option);
 
@@ -193,7 +192,7 @@ public:
         return &get_option_parameters(index);
     }
 
-    std::string_view get_option_parameter(const std::string& option, usize index)
+    std::string_view get_option_parameter(const std::string& option, usize index) const
     {
         const std::vector<std::string_view>* option_params = get_option_parameters(option);
 
@@ -210,7 +209,7 @@ public:
         return (*option_params)[index];
     }
 
-    std::string get_option_parameter_copy(const std::string& option, usize index)
+    std::string get_option_parameter_copy(const std::string& option, usize index) const
     {
         std::string_view param = get_option_parameter(option, index);
         std::string copy;
@@ -218,6 +217,8 @@ public:
         param.copy(copy.data(), copy.size());
         return copy;
     }
+
+
 
     const std::string& get_raw_command() const
     {

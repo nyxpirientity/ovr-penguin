@@ -30,7 +30,8 @@ namespace math
 template<typename T>
 T normalize_to_range(T a, T minimum, T maximum)
 {
-    return (maximum == minimum) ? (1.0) : ((a - minimum) / maximum - minimum);
+    // should technically be infinity if max == min....
+    return (maximum == minimum) ? ((a < minimum) ? 0.0: 1.0) : ((a - minimum) / (maximum - minimum));
 }
 }
 }

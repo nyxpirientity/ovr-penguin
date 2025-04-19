@@ -71,6 +71,50 @@ void OvrPenguin::execute_command(const std::string& input)
 {
     StringCommand command{input};
     wait_for_input = true;
+    
+    /* assumes --name option is already set */
+    auto try_get_overlay_by_name_param_required = [this, &command](const std::string& cmd_name)
+    {
+        std::string name = command.get_option_parameter_copy("--name", 0);
+
+        if (name.empty())
+        {
+            logger.log("OvrPenguin", cmd_name + " requires --name parameter to specify the overlay name..", true);
+            return WeakPtr<OvrWindowOverlay>{nullptr};
+        }
+
+        WeakPtr<OvrWindowOverlay> overlay = get_overlay_by_name(name);
+
+        if (!overlay)
+        {
+            logger.log("OvrPenguin", "couldn't find overlay of name '" + name + "' :c", true);
+            return WeakPtr<OvrWindowOverlay>{nullptr};
+        }
+
+        return overlay; 
+    };
+
+    /* assumes --index is already set */
+    auto get_and_verify_color_key_index_by_name_param_required = [this, &command](const std::string& cmd_name, WeakPtr<OvrWindowOverlay> overlay)
+    {
+        std::string index_str = command.get_option_parameter_copy("--index", 0);
+
+        if (index_str.empty())
+        {
+            logger.log("OvrPenguin", cmd_name + " requires --index parameter to specify the colorkey index..", true);
+            return usize(-1);
+        }
+        
+        usize index = std::stoull(index_str);
+
+        if (index >= overlay->get_num_color_keys())
+        {
+            logger.log("OvrPenguin", "colorkey index doesn't seem to exist yet :c", true);
+            return usize(-1);
+        }
+
+        return index;
+    };
 
     if (not command.has_parameter(0))
     {
@@ -206,7 +250,7 @@ void OvrPenguin::execute_command(const std::string& input)
 
         if (name.empty())
         {
-            logger.log("OvrPenguin", "destroy-window-overlay requires --name parameter to denote the overlay name.", true);
+            logger.log("OvrPenguin", "destroy-window-overlay requires --name parameter to specify the overlay name.", true);
             return;
         }
 
@@ -260,19 +304,10 @@ void OvrPenguin::execute_command(const std::string& input)
     {
         command.set_options({"--name", "--type"});
 
-        std::string name = command.get_option_parameter_copy("--name", 0);
+        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("set-window-overlay-type");
 
-        if (name.empty())
+        if (!overlay)
         {
-            logger.log("OvrPenguin", "set-window-overlay-type requires --name parameter to denote the overlay name.", true);
-            return;
-        }
-
-        WeakPtr<OvrWindowOverlay> overlay = get_overlay_by_name(name);
-
-        if (overlay == nullptr)
-        {
-            logger.log("OvrPenguin", "couldn't find overlay of name '" + name + "' :c", true);
             return;
         }
 
@@ -288,39 +323,29 @@ void OvrPenguin::execute_command(const std::string& input)
     }
     else if (command.get_parameter(0) == "set-window-overlay-properties")
     {
-        command.set_options({"--name", "--size", "--curve", "--parent", "--position", "--rotation", "--hidden"});
+        command.set_options({"--name", "--size", "--curve", "--parent", "--position", "--rotation", "--hidden", "--alpha"});
 
-        std::string name = command.get_option_parameter_copy("--name", 0);
+        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("set-window-overlay-properties");
 
-        if (name.empty())
+        if (!overlay)
         {
-            logger.log("OvrPenguin", "resize-window-overlay requires --name parameter to denote the overlay name.", true);
-            return;
-        }
-        
-        WeakPtr<OvrWindowOverlay> overlay = get_overlay_by_name(name);
-
-        if (overlay == nullptr)
-        {
-            logger.log("OvrPenguin", "couldn't find overlay of name '" + name + "' :c", true);
             return;
         }
 
-        std::string size_str = command.get_option_parameter_copy("--size", 0);
-
-        if (!size_str.empty())
+        run_if_cmd_option_real(command, "--size", 0, [this, overlay](real val)
         {
-            f64 size = std::stod(size_str);
-            overlay->set_size(size);
-        }
+            overlay->set_size(val);
+        });
 
-        std::string curve_str = command.get_option_parameter_copy("--curve", 0);
-
-        if (!curve_str.empty())
+        run_if_cmd_option_real(command, "--curve", 0, [this, overlay](real val)
         {
-            f64 curve = std::stod(curve_str);
-            overlay->set_curve(curve);
-        }
+            overlay->set_curve(val);
+        });
+
+        run_if_cmd_option_real(command, "--alpha", 0, [this, overlay](real val)
+        {
+            overlay->set_alpha(val);
+        });
 
         std::string parent_str = command.get_option_parameter_copy("--parent", 0);
 
@@ -344,31 +369,16 @@ void OvrPenguin::execute_command(const std::string& input)
             }
         }
 
-        std::string posx_str = command.get_option_parameter_copy("--position", 0);
-        std::string posy_str = command.get_option_parameter_copy("--position", 1);
-        std::string posz_str = command.get_option_parameter_copy("--position", 2);
-
-        if (!posx_str.empty() and !posy_str.empty() and !posz_str.empty())
+        run_if_cmd_option_vec3(command, "--position", 0, [this, overlay](Vec3 val)
         {
-            f64 x = std::stod(posx_str);
-            f64 y = std::stod(posy_str);
-            f64 z = std::stod(posz_str);
+            overlay->set_overlay_position(val);
+        });
 
-            overlay->set_overlay_position({x, y, z});
-        }
-
-        std::string rotx_str = command.get_option_parameter_copy("--rotation", 0);
-        std::string roty_str = command.get_option_parameter_copy("--rotation", 1);
-        std::string rotz_str = command.get_option_parameter_copy("--rotation", 2);
-
-        if (!rotx_str.empty() and !roty_str.empty() and !rotz_str.empty())
+        run_if_cmd_option_vec3(command, "--rotation", 0, [this, overlay](Vec3 val)
         {
-            f64 x = std::stod(rotx_str);
-            f64 y = std::stod(roty_str);
-            f64 z = std::stod(rotz_str);
+            overlay->set_overlay_rotation(val);
+        });
 
-            overlay->set_overlay_rotation({x, y, z});
-        }
 
         std::string hidden_str = command.get_option_parameter_copy("--hidden", 0);
         
@@ -387,6 +397,89 @@ void OvrPenguin::execute_command(const std::string& input)
                 logger.log("OvrPenguin", "set-window-overlay-properties --hidden expects 'true' or 'false' value", true);
             }
         }
+    }
+    else if (command.get_parameter(0) == "list-window-overlay-color-keys")
+    {
+        command.set_options({"--name"});
+
+        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("list-window-overlay-color-keys");
+        
+        if (!overlay)
+        {
+            return;
+        }
+
+        logger.log("OvrPenguin", "color key list!", true);
+        for (usize i = 0; i < overlay->get_num_color_keys(); i++)
+        {
+            logger.log("OvrPenguin", "- " + std::to_string(i) + " => " + overlay->get_color_key_string(i), true);
+        }
+    }
+    else if (command.get_parameter(0) == "new-window-overlay-color-key")
+    {
+        command.set_options({"--name"});
+        
+        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("new-window-overlay-color-key");
+        
+        if (!overlay)
+        {
+            return;
+        }
+
+        usize index = overlay->new_color_key();
+        
+        logger.log("OvrPenguin", "new color key created for overlay at index " + std::to_string(index), true);
+    }
+    else if (command.get_parameter(0) == "set-window-overlay-color-key-properties")
+    {
+        command.set_options({"--name", "--index", "--color", "--min", "--max"});
+        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("set-window-overlay-color-key");
+        
+        if (!overlay)
+        {
+            return;
+        }
+
+        usize index = get_and_verify_color_key_index_by_name_param_required("set-window-overlay-color-key", overlay);
+        
+        if (index == -1)
+        {
+            return;
+        }
+
+        run_if_cmd_option_vec3(command, "--color", 0, [this, overlay, index](Vec3 val)
+        {
+            overlay->set_color_key_color(index, Color{val.x, val.y, val.z, 1.0});
+        });
+
+        run_if_cmd_option_real(command, "--min", 0, [this, overlay, index](real val)
+        {
+            overlay->set_color_key_min(index, val);
+        });
+        
+        run_if_cmd_option_real(command, "--max", 0, [this, overlay, index](real val)
+        {
+            overlay->set_color_key_max(index, val);
+        });
+    }
+    else if (command.get_parameter(0) == "destroy-window-overlay-color-key")
+    {
+        command.set_options({"--name", "--index"});
+        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("destroy-window-overlay-color-key");
+        
+        if (!overlay)
+        {
+            return;
+        }
+
+        usize index = get_and_verify_color_key_index_by_name_param_required("destroy-window-overlay-color-key", overlay);
+        
+        if (index == -1)
+        {
+            return;
+        }
+
+        overlay->destroy_color_key(index);
     }
     else if (command.get_parameter(0) == "refresh-aliases")
     {
@@ -741,6 +834,7 @@ std::string OvrPenguin::serialize_state_to_exec()
         const Vec3& ol_rot = overlay->get_overlay_rotation();
         f64 ol_curve = overlay->get_curve();
         f64 ol_size = overlay->get_size();
+        real ol_alpha = overlay->get_alpha();
         std::string parent_string;
         std::string ol_hidden_str;
 
@@ -788,9 +882,18 @@ std::string OvrPenguin::serialize_state_to_exec()
                 "--rotation " + std::to_string(ol_rot.x) + " " + std::to_string(ol_rot.y) + " " + std::to_string(ol_rot.z) + " "
                 "--curve " + std::to_string(ol_curve) + " "
                 "--size " + std::to_string(ol_size) + " "
+                "--alpha " + std::to_string(ol_alpha) + " "
                 "--hidden " + ol_hidden_str + " "
                 "--parent " + parent_string + "\n"
         );
+
+        for (usize i = 0; i < overlay->get_num_color_keys(); i++)
+        {
+            output.append(
+                "new-window-overlay-color-key --name \"" + overlay_name + "\"\n"
+                "set-window-overlay-color-key-properties --name \"" + overlay_name + "\" --index " + std::to_string(i) + " " + overlay->get_color_key_string(i) + "\n"
+            );
+        }
     }
 
     return output;
@@ -831,6 +934,34 @@ void OvrPenguin::init_next_overlay_capture()
     logger.log("OvrPenguin", "initializing window overlay window capture for '" + overlay->get_overlay_name() + "'...", true);
 
     init_overlay_capture(overlay);
+}
+
+void OvrPenguin::run_if_cmd_option_vec3(const StringCommand &command, const std::string &option, usize from_index, std::function<void(Vec3 val)> function)
+{
+    std::string x_str = command.get_option_parameter_copy(option, from_index);
+    std::string y_str = command.get_option_parameter_copy(option, from_index + 1);
+    std::string z_str = command.get_option_parameter_copy(option, from_index + 2);
+
+    if (!x_str.empty() and !y_str.empty() and !z_str.empty())
+    {
+        real x = std::stod(x_str);
+        real y = std::stod(y_str);
+        real z = std::stod(z_str);
+
+        function({x, y, z});
+    }
+}
+
+void OvrPenguin::run_if_cmd_option_real(const StringCommand &command, const std::string &option, usize from_index, std::function<void(real val)> function)
+{
+    std::string param = command.get_option_parameter_copy(option, from_index);
+
+    if (!param.empty())
+    {
+        real val = std::stod(param);
+
+        function(val);
+    }
 }
 
 } // namespace nyxpiri::ovrpenguin

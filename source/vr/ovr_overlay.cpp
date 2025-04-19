@@ -218,10 +218,22 @@ void OvrOverlay::set_curve(f64 new_curve)
     refresh_overlay_properties();
 }
 
+real OvrOverlay::get_alpha()
+{
+    return alpha;
+}
+
+void OvrOverlay::set_alpha(real new_alpha)
+{
+    alpha = new_alpha;
+    refresh_overlay_properties();
+}
+
 void OvrOverlay::refresh_overlay_properties()
 {
     vr::VROverlay()->SetOverlayWidthInMeters(handle, size);
     vr::VROverlay()->SetOverlayCurvature(handle, curve);
+    vr::VROverlay()->SetOverlayAlpha(handle, alpha);
 }
 
 void OvrOverlay::user_hide_overlay()

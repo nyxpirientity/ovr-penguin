@@ -28,12 +28,19 @@ void OvrWindowOverlay::reset_window_session()
         {
             for (Color& color : color)
             {
-                const i16 r_diff = std::abs(i16(color.r) - i16(key.color.r));    
-                const i16 g_diff = std::abs(i16(color.g) - i16(key.color.g));    
-                const i16 b_diff = std::abs(i16(color.b) - i16(key.color.b));
-                const i16 squared_dist = (r_diff + g_diff + b_diff);
+                //const i16 r_diff = std::abs(i16(color.r) - i16(key.color.r));    
+                //const i16 g_diff = std::abs(i16(color.g) - i16(key.color.g));    
+                //const i16 b_diff = std::abs(i16(color.b) - i16(key.color.b));
+                //const i16 squared_dist = (r_diff + g_diff + b_diff);
 
-                const f64 normalized_dist = f64(squared_dist) / f64(765);
+                //const f64 normalized_dist = f64(squared_dist) / f64(765);
+
+                //color.a = u8(std::max(0.0, std::min(1.0, math::normalize_to_range(normalized_dist, key.min_dist, key.max_dist))) * 255);
+                // ^^ that implementation is potentially faster, but also potentially less accurate. keeping it to test later.
+
+                const GlmVec3 color_vec = {real(color.r) / 255, real(color.g) / 255, real(color.b) / 255};
+                const GlmVec3 key_color_vec = {real(key.color.r) / 255, real(key.color.g) / 255, real(key.color.b) / 255};
+                const real normalized_dist = glm::distance(color_vec, key_color_vec) / glm::length(GlmVec3{1.0, 1.0, 1.0});
 
                 color.a = u8(std::max(0.0, std::min(1.0, math::normalize_to_range(normalized_dist, key.min_dist, key.max_dist))) * 255);
             }
@@ -58,6 +65,46 @@ void OvrWindowOverlay::end_window_session()
 
     screen_capturer->destroy_stream(screen_capture_stream);
     screen_capture_stream = nullptr;
+}
+
+usize OvrWindowOverlay::get_num_color_keys()
+{
+    return color_keys.size();
+}
+
+usize OvrWindowOverlay::new_color_key()
+{
+    color_keys.push_back({});
+    return color_keys.size() - 1;
+}
+
+void OvrWindowOverlay::set_color_key_color(usize index, Color color)
+{
+    color_keys[index].color = color;
+}
+
+void OvrWindowOverlay::set_color_key_min(usize index, real min)
+{
+    color_keys[index].min_dist = min;
+}
+
+void OvrWindowOverlay::set_color_key_max(usize index, real max)
+{
+    color_keys[index].max_dist = max;
+}
+
+void OvrWindowOverlay::destroy_color_key(usize index)
+{
+    color_keys.erase(color_keys.begin() + index);
+}
+
+std::string OvrWindowOverlay::get_color_key_string(usize index) const
+{
+    const ColorKey& key = color_keys[index];
+    return 
+        "--color " + std::to_string(real(key.color.r) / 255) + " " + std::to_string(real(key.color.g) / 255) + " " + std::to_string(real(key.color.b) / 255) + 
+        " --min " + std::to_string(key.min_dist) + 
+        " --max " + std::to_string(key.max_dist);
 }
 
 void OvrWindowOverlay::on_start()
