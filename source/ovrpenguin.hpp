@@ -39,6 +39,7 @@ private:
 
     void run_if_cmd_option_vec3(const class StringCommand& command, const std::string& option, usize from_index, std::function<void(struct Vec3 val)> function);
     void run_if_cmd_option_real(const class StringCommand& command, const std::string& option, usize from_index, std::function<void(real val)> function);
+    void run_if_cmd_option_usize(const class StringCommand& command, const std::string& option, usize from_index, std::function<void(usize val)> function);
 
 private:
     Logger logger;

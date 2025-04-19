@@ -33,6 +33,18 @@ public:
     void destroy_color_key(usize index);
     std::string get_color_key_string(usize index) const;
 
+    usize get_top_crop();
+    void set_top_crop(usize val);
+
+    usize get_bottom_crop();
+    void set_bottom_crop(usize val);
+
+    usize get_right_crop();
+    void set_right_crop(usize val);
+
+    usize get_left_crop();
+    void set_left_crop(usize val);
+
 protected:
     virtual void on_start() override;
     virtual void on_tick(real delta_seconds) override;
@@ -54,6 +66,10 @@ private:
     EventBinding screen_capture_session_started_binding;
 
     DynArray<ColorKey> color_keys;
+    usize top_crop = 0;
+    usize bottom_crop = 0;
+    usize right_crop = 0;
+    usize left_crop = 0;
 };
 
 } // namespace nyxpiri::ovrpenguin

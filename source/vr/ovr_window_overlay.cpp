@@ -46,6 +46,31 @@ void OvrWindowOverlay::reset_window_session()
             }
         }
         
+        if (left_crop != 0.0 || right_crop != 0.0 || top_crop != 0.0 || bottom_crop != 0.0)
+        {
+            const usize new_width = width - (usize(left_crop) + usize(right_crop));
+            const usize new_height = height - (usize(top_crop) + usize(bottom_crop));
+
+            if (new_width == 0 || new_height == 0)
+            {
+                return;
+            }
+
+            DynArray<Color> cropped_color(new_width * new_height);
+
+            for (usize y = 0; y < new_height; y++)
+            {
+                for (usize x = 0; x < new_width; x++)
+                {
+                    cropped_color[y * new_width + x] = color[(y + top_crop) * width + (x + left_crop)];
+                }
+            }
+
+            color = std::move(cropped_color);
+            width = new_width;
+            height = new_height;
+        }
+
         set_texture_data(std::move(color), width, height);
         color.clear();
     });
@@ -105,6 +130,46 @@ std::string OvrWindowOverlay::get_color_key_string(usize index) const
         "--color " + std::to_string(real(key.color.r) / 255) + " " + std::to_string(real(key.color.g) / 255) + " " + std::to_string(real(key.color.b) / 255) + 
         " --min " + std::to_string(key.min_dist) + 
         " --max " + std::to_string(key.max_dist);
+}
+
+usize OvrWindowOverlay::get_top_crop()
+{
+    return top_crop;
+}
+
+void OvrWindowOverlay::set_top_crop(usize val)
+{
+    top_crop = val;
+}
+
+usize OvrWindowOverlay::get_bottom_crop()
+{
+    return bottom_crop;
+}
+
+void OvrWindowOverlay::set_bottom_crop(usize val)
+{
+    bottom_crop = val;
+}
+
+usize OvrWindowOverlay::get_right_crop()
+{
+    return right_crop;
+}
+
+void OvrWindowOverlay::set_right_crop(usize val)
+{
+    right_crop = val;
+}
+
+usize OvrWindowOverlay::get_left_crop()
+{
+    return left_crop;
+}
+
+void OvrWindowOverlay::set_left_crop(usize val)
+{
+    left_crop = val;
 }
 
 void OvrWindowOverlay::on_start()

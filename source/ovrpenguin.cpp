@@ -323,7 +323,8 @@ void OvrPenguin::execute_command(const std::string& input)
     }
     else if (command.get_parameter(0) == "set-window-overlay-properties")
     {
-        command.set_options({"--name", "--size", "--curve", "--parent", "--position", "--rotation", "--hidden", "--alpha"});
+        command.set_options({"--name", "--size", "--curve", "--parent", "--position", "--rotation", "--hidden", "--alpha",
+            "--top-crop", "--bottom-crop", "--right-crop", "--left-crop"});
 
         WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("set-window-overlay-properties");
 
@@ -345,6 +346,26 @@ void OvrPenguin::execute_command(const std::string& input)
         run_if_cmd_option_real(command, "--alpha", 0, [this, overlay](real val)
         {
             overlay->set_alpha(val);
+        });
+
+        run_if_cmd_option_usize(command, "--top-crop", 0, [this, overlay](usize val)
+        {
+            overlay->set_top_crop(val);
+        });
+
+        run_if_cmd_option_usize(command, "--bottom-crop", 0, [this, overlay](usize val)
+        {
+            overlay->set_bottom_crop(val);
+        });
+
+        run_if_cmd_option_usize(command, "--right-crop", 0, [this, overlay](usize val)
+        {
+            overlay->set_right_crop(val);
+        });
+        
+        run_if_cmd_option_usize(command, "--left-crop", 0, [this, overlay](usize val)
+        {
+            overlay->set_left_crop(val);
         });
 
         std::string parent_str = command.get_option_parameter_copy("--parent", 0);
@@ -835,8 +856,15 @@ std::string OvrPenguin::serialize_state_to_exec()
         f64 ol_curve = overlay->get_curve();
         f64 ol_size = overlay->get_size();
         real ol_alpha = overlay->get_alpha();
+        
+        real top_crop = overlay->get_top_crop();
+        real bottom_crop = overlay->get_bottom_crop();
+        real right_crop = overlay->get_right_crop();
+        real left_crop = overlay->get_left_crop();
+
         std::string parent_string;
         std::string ol_hidden_str;
+
 
         switch (overlay->get_overlay_type())
         {
@@ -883,6 +911,10 @@ std::string OvrPenguin::serialize_state_to_exec()
                 "--curve " + std::to_string(ol_curve) + " "
                 "--size " + std::to_string(ol_size) + " "
                 "--alpha " + std::to_string(ol_alpha) + " "
+                "--top-crop " + std::to_string(top_crop) + " "
+                "--bottom-crop " + std::to_string(bottom_crop) + " "
+                "--right-crop " + std::to_string(right_crop) + " "
+                "--left-crop " + std::to_string(left_crop) + " "
                 "--hidden " + ol_hidden_str + " "
                 "--parent " + parent_string + "\n"
         );
@@ -959,6 +991,18 @@ void OvrPenguin::run_if_cmd_option_real(const StringCommand &command, const std:
     if (!param.empty())
     {
         real val = std::stod(param);
+
+        function(val);
+    }
+}
+
+void OvrPenguin::run_if_cmd_option_usize(const StringCommand &command, const std::string &option, usize from_index, std::function<void(usize val)> function)
+{
+    std::string param = command.get_option_parameter_copy(option, from_index);
+
+    if (!param.empty())
+    {
+        usize val = std::stoull(param);
 
         function(val);
     }
