@@ -46,12 +46,12 @@ void OvrWindowOverlay::reset_window_session()
             }
         }
         
-        if (left_crop != 0.0 || right_crop != 0.0 || top_crop != 0.0 || bottom_crop != 0.0)
+        if (left_crop != 0.0 or right_crop != 0.0 or top_crop != 0.0 or bottom_crop != 0.0)
         {
-            const usize new_width = width - (usize(left_crop) + usize(right_crop));
-            const usize new_height = height - (usize(top_crop) + usize(bottom_crop));
+            const usize new_width = width - std::min(width, (usize(left_crop) + usize(right_crop)));
+            const usize new_height = height - std::min(height, (usize(top_crop) + usize(bottom_crop)));
 
-            if (new_width == 0 || new_height == 0)
+            if (new_width == 0 or new_height == 0)
             {
                 return;
             }

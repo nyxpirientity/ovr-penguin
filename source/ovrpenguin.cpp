@@ -162,17 +162,111 @@ void OvrPenguin::execute_command(const std::string& input)
     }
     else if (command.get_parameter(0) == "help")
     {
-        logger.log("OvrPenguin", "Available commands!", true);
-        logger.log("OvrPenguin", "- help", true);
-        logger.log("OvrPenguin", "- stop", true);
-        logger.log("OvrPenguin", "- ovr-init", true);
-        logger.log("OvrPenguin", "- new-window-overlay --name <name> --type (optional) <type>", true);
-        logger.log("OvrPenguin", "- list-window-overlays", true);
-        logger.log("OvrPenguin", "- destroy-window-overlay --name <name>", true);
-        logger.log("OvrPenguin", "- init-window-overlay-capture --name <name> [--all]", true);
-        logger.log("OvrPenguin", "- set-window-overlay-type --name <name> --type <type>", true);
-        logger.log("OvrPenguin", "- set-window-overlay-properties --size <size> --curve <curvature (0.0 - 1.0)>", true);
-        logger.log("OvrPenguin", "- exec --file <file>", true);
+        io_handler->async_print_string("Available commands!\n");
+        io_handler->async_print_string(
+            "- help\n"
+            "    outputs this message\n\n");
+        
+        io_handler->async_print_string(
+            "- stop\n"
+            "    stops the node tree, and exiting the program\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- ovr-init\n"
+            "    initializes OpenVR (if not already initialized)\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- new-window-overlay --name <string> [--type <type>]\n"
+            "    creates a new window overlay with the given name and type. The type can be 'dashboard' or 'world'.\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- list-window-overlays\n"
+            "    lists all window overlays that have been created.\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- destroy-window-overlay --name <string>\n"
+            "    destroys the overlay with the given name.\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- init-window-overlay-capture --name <string> [--all]\n"
+            "    initializes the window capture for the overlay with the given name. If --all is specified, all overlays will be initialized.\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- set-window-overlay-type --name <string> --type <type>\n"
+            "    sets the type of the overlay with the given name to the given type. The type can be 'dashboard' or 'world'.\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- set-window-overlay-properties --name <string> [--size <number>] [--curve <number>] [--parent <parent>] [--position <vector3>] [--rotation <vector3>] [--hidden <boolean>] [--alpha <number>] [--top-crop <number>] [--bottom-crop <number>] [--right-crop <number>] [--left-crop <number>]\n"
+            "    sets the properties of the overlay with the given name. \n"
+            "    --size <number> ~ sets the size of the overlay (default: 1.0)\n"
+            "    --curve <number> ~ sets the curve of the overlay (default: 0.0)\n"
+            "    --parent <origin/left-hand/right-hand/hmd> ~ sets the parent of the overlay (default: origin)\n"
+            "    --position <vector3> ~ sets the position of the overlay (default: 0.0, 0.0, 0.0)\n"
+            "    --rotation <vector3> ~ sets the rotation of the overlay (default: 0.0, 0.0, 0.0)\n"
+            "    --hidden <boolean> ~ sets whether the overlay is hidden (default: false)\n"
+            "    --alpha <number> ~ sets the alpha of the overlay (default: 1.0)\n"
+            "    --top-crop <number> ~ sets the top crop of the overlay (default: 0)\n"
+            "    --bottom-crop <number> ~ sets the bottom crop of the overlay (default: 0)\n"
+            "    --right-crop <number> ~ sets the right crop of the overlay (default: 0)\n"
+            "    --left-crop <number> ~ sets the left crop of the overlay (default: 0)\n\n"
+        );
+        
+        io_handler->async_print_string(
+            "- new-window-overlay-color-key --name <string>\n"
+            "    creates a new color key for overlay of name, outputs back the index (like an id number) of the new color key\n\n"
+        );
+
+        io_handler->async_print_string(
+            "- set-window-overlay-color-key-properties --name <string> --index <integer> [--color <vector3>] [--min <number>] [--max <number>]\n"
+            "    sets the properties of the color key with the given name and index. \n"
+            "    --color <vector3> ~ sets the color of the color key (default: 0.0, 0.0, 0.0)\n"
+            "    --min <number> ~ sets the min range/distance of the color key (default: 0.01)\n"
+            "    --max <number> ~ sets the max range/distance of the color key (default: 0.02)\n\n"
+        );
+
+        io_handler->async_print_string(
+            "- destroy-window-overlay-color-key --name <string> --index <integer>\n"
+            "    destroys the color key with the given name and index.\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- list-window-overlay-color-keys --name <string>\n"
+            "    lists all color keys for overlay of name\n\n"
+        );
+
+        io_handler->async_print_string(
+            "- refresh-aliases\n"
+            "    refreshes the aliases from disk\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- list-aliases\n"
+            "    lists all aliases currently loaded\n\n"
+        );
+    
+        io_handler->async_print_string(
+            "- new-alias --file <path> --name <string> --value <value>\n"
+            "    creates a new alias with the given name and value, and writes it to the given file.\n\n"
+        );
+
+        io_handler->async_print_string(
+            "- exec --file <path>\n"
+            "    executes the given OvrPenguin executable file (a series of commands) with the given name.\n\n"
+        );
+        
+        io_handler->async_print_string(
+            "- save-exec --name <string> --file <path> [--dupe] [--overwrite]\n"
+            "    serializes the current state as an executable that can be executed with exec, and saves it to the given file.\n"
+            "    The file will be created if it doesn't exist.\n"
+            "    --dupe ~ duplicates the file to a new name before writing, if a file of the given path already exists.\n"
+            "    --overwrite ~ overwrites the file if it already exists.\n\n");
     }
     else if (command.get_parameter(0) == "ovr-init")
     {
@@ -454,14 +548,14 @@ void OvrPenguin::execute_command(const std::string& input)
     else if (command.get_parameter(0) == "set-window-overlay-color-key-properties")
     {
         command.set_options({"--name", "--index", "--color", "--min", "--max"});
-        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("set-window-overlay-color-key");
+        WeakPtr<OvrWindowOverlay> overlay = try_get_overlay_by_name_param_required("set-window-overlay-color-key-properties");
         
         if (!overlay)
         {
             return;
         }
 
-        usize index = get_and_verify_color_key_index_by_name_param_required("set-window-overlay-color-key", overlay);
+        usize index = get_and_verify_color_key_index_by_name_param_required("set-window-overlay-color-key-properties", overlay);
         
         if (index == -1)
         {
