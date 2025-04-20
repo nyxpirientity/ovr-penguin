@@ -156,5 +156,25 @@ usize Node::find_child_index(WeakPtr<Node> child)
     return -1;
 }
 
+void Node::set_max_fps(real val)
+{
+    if (!parent)
+    {
+        return;
+    }
+
+    parent->set_max_fps(val);
+}
+
+real Node::get_max_fps()
+{
+    if (!parent)
+    {
+        return 0.0f;
+    }
+
+    return parent->get_max_fps();
+}
+
 } // namespace nyxpiri::ovrpenguin
 

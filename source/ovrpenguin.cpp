@@ -268,6 +268,20 @@ void OvrPenguin::execute_command(const std::string& input)
             "    --dupe ~ duplicates the file to a new name before writing, if a file of the given path already exists.\n"
             "    --overwrite ~ overwrites the file if it already exists.\n\n");
     }
+    else if (command.get_parameter(0) == "max-fps")
+    {
+        command.set_options({"--set", "--get"});
+        
+        run_if_cmd_option_real(command, "--set", 0, [this](real val)
+        {
+            set_max_fps(val);
+        });
+
+        if (command.has_parameter("--get"))
+        {
+            logger.log("OvrPenguin", "max-fps => " + std::to_string(get_max_fps()), true);
+        }
+    }
     else if (command.get_parameter(0) == "ovr-init")
     {
         logger.log("OvrPenguin", "initializing OpenVR..,,,", true);

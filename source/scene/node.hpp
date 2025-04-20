@@ -51,6 +51,9 @@ public:
     
     usize find_child_index(WeakPtr<Node> child);
 
+    virtual void set_max_fps(real val);
+    virtual real get_max_fps();
+
 protected:
     virtual void on_start() {}
     virtual void on_tick(real delta_seconds) {}

@@ -69,8 +69,8 @@ void ScreenCapturer::on_tick(real delta_seconds)
 {
     Super::on_tick(delta_seconds);
 
-    pw_loop_iterate(m_pw_loop, 0);
     g_main_context_iteration(g_main_context, false);
+    pw_loop_iterate(m_pw_loop, 0);
 }
 
 void ScreenCapturer::on_stop()

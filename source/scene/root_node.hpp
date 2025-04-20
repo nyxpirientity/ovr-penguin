@@ -16,7 +16,8 @@ public:
 protected:
     virtual void on_start() override;
 
-    void set_max_fps(usize max_fps);
+    virtual void set_max_fps(real max_fps) override;
+    virtual real get_max_fps() override;
 
 protected:
     std::chrono::steady_clock::time_point previous_tick_time_point;

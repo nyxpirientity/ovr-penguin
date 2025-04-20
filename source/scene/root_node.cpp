@@ -22,7 +22,7 @@ void RootNode::on_start()
     }
 }
 
-void RootNode::set_max_fps(usize max_fps)
+void RootNode::set_max_fps(real max_fps)
 {
     if (max_fps <= 0)
     {
@@ -30,7 +30,12 @@ void RootNode::set_max_fps(usize max_fps)
         return;
     }
 
-    min_delta_microseconds = std::chrono::microseconds{(1 / max_fps) * 1'000'000};
+    min_delta_microseconds = std::chrono::microseconds{usize((1.0 / max_fps) * 1'000'000)};
+}
+
+real RootNode::get_max_fps()
+{
+    return 1.0 / (real(min_delta_microseconds.count()) / 1'000'000);
 }
 
 } // namespace nyxpiri::ovrpenguin
