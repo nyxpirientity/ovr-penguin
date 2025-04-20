@@ -52,13 +52,7 @@ void ScreenCapturer::on_start()
     pw_loop_enter(m_pw_loop);
 
     m_pw_context = pw_context_new(m_pw_loop, NULL, 0);
-
-    //pw_properties* core_props = pw_properties_new(
-        //PW_KEY_MEDIA_ROLE, "Screen",
-        //PW_KEY_MEDIA_TYPE, "Video",
-        //PW_KEY_MEDIA_CATEGORY, "Capture", NULL
-        //);
-
+    
     g_main_context = g_main_context_default();
     GLibErrorPtr obj_creation_error = nullptr;
     xdp_portal = xdp_portal_initable_new(obj_creation_error.pass());
@@ -112,9 +106,36 @@ ScreenCaptureStream::ScreenCaptureStream(WeakPtr<ScreenCapturer> in_capturer, Lo
 ScreenCaptureStream::~ScreenCaptureStream()
 {
     logger.log("ScreenCaptureStream", "...closing XdpSession, pw_stream and pw_core!", false);
-    xdp_session_close(session.get());
-    pw_stream_disconnect(m_pw_stream);
-    pw_core_disconnect(m_pw_core);
+
+    if (session)
+    {
+        logger.log("ScreenCaptureStream", "...closing XdpSession!", false);
+        xdp_session_close(session.get());
+    }
+    else
+    {
+        logger.log("ScreenCaptureStream", "...XdpSession didn't exist, not closing!", false);
+    }
+
+    if (m_pw_stream)
+    {
+        logger.log("ScreenCaptureStream", "...closing pw_stream!", false);
+        pw_stream_disconnect(m_pw_stream);
+    }
+    else
+    {
+        logger.log("ScreenCaptureStream", "...m_pw_stream didn't exist, not closing!", false);
+    }
+
+    if (m_pw_core)
+    {
+        logger.log("ScreenCaptureStream", "...closing pw_core!", false);
+        pw_core_disconnect(m_pw_core);
+    }
+    else
+    {
+        logger.log("ScreenCaptureStream", "...m_pw_core didn't exist, not closing!", false);
+    }
 }
 
 void ScreenCaptureStream::debug_log_info()
@@ -136,6 +157,7 @@ void ScreenCaptureStream::on_screencast_session_created(GObject *source_object, 
     {
         logger.log_error("ScreenCaptureStream", format_gerror_string("Screencast XdpSession creation failed :c", *error), true);
         on_screencast_started.broadcast({format_gerror_string("Screencast XdpSession creation failed :c", *error), -1});
+        session = nullptr;
         return;
     }
 
@@ -153,6 +175,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     {
         logger.log_error("ScreenCaptureStream", format_gerror_string("Screencast XdpSession start failed :c", *error), true);
         on_screencast_started.broadcast({format_gerror_string("Screencast XdpSession start failed :c", *error), -1});
+        session = nullptr;
         return;
     }
 
@@ -185,6 +208,7 @@ void ScreenCaptureStream::on_screencast_session_start(GObject *source_object, GA
     {
         logger.log_error("ScreenCaptureStream", "No streams in XdpSession? :c", true);
         on_screencast_started.broadcast({format_gerror_string("No streams in XdpSession? :c", *error), -1});
+        session = nullptr;
         return;
     }
 
@@ -255,19 +279,19 @@ void ScreenCaptureStream::on_stream_state_changed(pw_stream_state old, pw_stream
 
     if (state == PW_STREAM_STATE_UNCONNECTED)
     {
-        //logger.log("ScreenCaptureStream", "Stream status is... unconnected?", true);
+        logger.log("ScreenCaptureStream", "Stream status is... unconnected?", false);
         return;
     }
 
     if (state == PW_STREAM_STATE_CONNECTING)
     {
-        //logger.log("ScreenCaptureStream", "Stream status is... connecting...? hopefully without error...", true);
+        logger.log("ScreenCaptureStream", "Stream status is... connecting...? hopefully without error...", false);
         return;
     }
 
     if (state == PW_STREAM_STATE_PAUSED)
     {
-        //logger.log("ScreenCaptureStream", "Stream status is... paused", true);
+        logger.log("ScreenCaptureStream", "Stream status is... paused", false);
         return;
     }
 }
