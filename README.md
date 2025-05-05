@@ -25,11 +25,11 @@ Due to being a CLI software, especially one for VR use, there was some effort pu
 # Building/Compiling
 ## Dependencies
 Like any C/C++ program, ovr-penguin tries to avoid dependencies, but it still uses a number of libraries.
-- libportal ~ for requesting screencast permissions (or whatever other permissions must be requested via xdg-desktop-portal)
-- pipewire ~ for receiving locally streamed data, such as screencast data
-- glad/opengl ~ currently used for uploading texture data to the gpu for OpenVR to read
-- glfw ~ for opening a OpenGL context
-- openvr ~ this is an OpenVR overlay, of course this depends on it
+- [libportal](https://github.com/flatpak/libportal) ~ for requesting screencast permissions (or whatever other permissions must be requested via xdg-desktop-portal)
+- [pipewire](https://pipewire.org/) ~ for receiving locally streamed data, such as screencast data
+- [glad](https://github.com/Dav1dde/glad)/[opengl](https://www.khronos.org/opengl/) ~ currently used for uploading texture data to the gpu for OpenVR to read, generated glad files are included in the repository.
+- [glfw](https://github.com/glfw/glfw) ~ for opening a OpenGL context
+- [openvr](https://github.com/ValveSoftware/openvr) ~ this is an OpenVR overlay, of course this depends on it
 
 ## Build System
 ovr-penguin uses CMake for building, currently only presets for Clang have been created. No extra steps beyond basic CMake usage should be necessary.
