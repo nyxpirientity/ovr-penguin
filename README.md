@@ -7,6 +7,7 @@ Currently, ovr-penguin only serves to give users the ability to setup window cap
 ## Notes
 ovr-penguin was **not** made to be a perfectly polished peice of software, it was made for personal use to resolve problems I had when switching to Linux.
 It was tested on only _one_ system, running Fedora KDE Plasma, RTX 3070, with an AMD processor, on a Valve Index.
+Additionally, as much as I believe this need not to be said, ovr-penguin is not affiliated to, endorsed by or in any way associated to OpenVR or Valve Corporation. It's an independent mess of a tool. 
 
 ## General Features
 Due to being a CLI software, especially one for VR use, there was some effort put into allowing reduction of verbosity and giving some convenience to avoid users typing too many commands everytime during use.
@@ -28,7 +29,7 @@ Like any C/C++ program, ovr-penguin tries to avoid dependencies, but it still us
 - pipewire ~ for receiving locally streamed data, such as screencast data
 - glad/opengl ~ currently used for uploading texture data to the gpu for OpenVR to read
 - glfw ~ for opening a OpenGL context
-- openvr ~ it's the OpenVR api, of course this depends on it
+- openvr ~ this is an OpenVR overlay, of course this depends on it
 
 ## Build System
 ovr-penguin uses CMake for building, currently only presets for Clang have been created. No extra steps beyond basic CMake usage should be necessary.
