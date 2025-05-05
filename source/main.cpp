@@ -114,9 +114,9 @@ int main(int argc, char** argv)
     std::cout << "Welcome to OVR Penguin, a CLI utility for reducing the shortcomings of SteamVR on Linux Wayland systems!\n"
                  "Input 'help' for guidance on how to use OVR Penguin.\n"
                  "OVRPenguin will not initialize/connect to OpenVR until you enter the command 'ovr-init'.\n\n";
+                 
+    std::cout << "For information on third-party libraries in-use, and their licenses, look to the github repository at https://github.com/nyxpirientity/ovr-penguin (...where you probably got this, anyway...)\n";
     
-    StringCommand command_test{"this is \"a test command\" for testing\" quotes, like how\"\" \"that other one shouldn't work right, however,\"this should seperate interestingly."};
-
     RootNode* root_node = new RootNode();
     root_node->adopt(Node::construct<OvrPenguin>());
 
